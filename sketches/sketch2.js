@@ -7,11 +7,18 @@ registerSketch('sk2', function (p) {
   };
 
   p.draw = function () {
-    p.background(220);
+    p.background(255);
+    p.noStroke();
     p.fill(100, 150, 240);
     p.textSize(32);
     p.textAlign(p.CENTER, p.CENTER);
     p.text('HWK #4. A', p.width / 2, p.height / 2);
+
+    // Draw frame as part of the sketch output.
+    p.noFill();
+    p.stroke(0);
+    p.strokeWeight(1);
+    p.rect(0, 0, p.width - 1, p.height - 1);
   };
 
   p.windowResized = function () { p.resizeCanvas(CANVAS_SIZE, CANVAS_SIZE); };
