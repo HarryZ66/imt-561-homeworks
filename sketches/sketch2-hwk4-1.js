@@ -9,6 +9,7 @@ registerSketch('sk2', function (p) {
   const totalMinutes = 18;
   const cx = 400, cy = 370, R = 255;
   let slices = [];
+  let hoveredSlice = -1;
 
   p.setup = function () {
     p.createCanvas(CANVAS_SIZE, CANVAS_SIZE);
@@ -21,12 +22,30 @@ registerSketch('sk2', function (p) {
     });
   };
 
+  function getSliceAt(px, py) {
+    const dx = px - cx, dy = py - cy;
+    if (Math.sqrt(dx*dx + dy*dy) > R) return -1;
+    let a = Math.atan2(dy, dx);
+    if (a < 0) a += p.TWO_PI;
+    for (let i = 0; i < slices.length; i++) {
+      let s = slices[i].start % p.TWO_PI;
+      let e = slices[i].end % p.TWO_PI;
+      if (s < 0) s += p.TWO_PI;
+      if (e < 0) e += p.TWO_PI;
+      if (s < e) { if (a >= s && a < e) return i; }
+      else { if (a >= s || a < e) return i; }
+    }
+    return -1;
+  }
+
   p.draw = function () {
     p.background(248);
+    hoveredSlice = getSliceAt(p.mouseX, p.mouseY);
 
-    slices.forEach(sl => {
-      p.fill(sl.col[0], sl.col[1], sl.col[2], 140);
-      p.stroke(255);
+    slices.forEach((sl, i) => {
+      let alpha = i === hoveredSlice ? 210 : 140;
+      p.fill(sl.col[0], sl.col[1], sl.col[2], alpha);
+      p.stroke(i === hoveredSlice ? p.color(120,120,120) : p.color(255));
       p.strokeWeight(2);
       p.arc(cx, cy, R * 2, R * 2, sl.start, sl.end, p.PIE);
     });
@@ -52,7 +71,6 @@ registerSketch('sk2', function (p) {
     p.textSize(22); p.textStyle(p.BOLD);
     p.textAlign(p.CENTER, p.CENTER);
     p.text('Meeting Agenda Clock', cx, 44);
-
     p.fill(120); p.textSize(12); p.textStyle(p.NORMAL);
     p.text('conference room  ·  team leads  ·  workplace', cx, 68);
 
