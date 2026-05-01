@@ -50,6 +50,15 @@ registerSketch('sk3', function (p) {
     let rm = rem(c), pr = prog(c), rr = 1 - pr;
     let hov = hoveredClock === i, bc = priCol[pri];
 
+    // shake when <10% remaining
+    let sx = 0, sy = 0;
+    if (pr >= 0.9 && rm > 0) {
+      let k = p.map(pr, 0.9, 1, 0.5, 2);
+      sx = p.random(-k, k);
+      sy = p.random(-k, k);
+    }
+    let cx = c.cx + sx, cy = c.cy + sy;
+
     // update particles
     let aliveAngle = rr * p.TWO_PI;
     pSets[i].forEach(d => {
@@ -58,21 +67,21 @@ registerSketch('sk3', function (p) {
     });
 
     // outer ring
-    p.push(); p.translate(c.cx, c.cy);
+    p.push(); p.translate(cx, cy);
     let rc = wCol(pr); rc.setAlpha(hov ? 80 : 40);
     p.fill(rc); p.stroke(hov ? p.color(50,100,200) : wCol(pr)); p.strokeWeight(2);
     p.ellipse(0, 0, r * 2 + 12, r * 2 + 12);
     p.pop();
 
     // grey bg
-    p.push(); p.translate(c.cx, c.cy);
+    p.push(); p.translate(cx, cy);
     p.fill(225); p.noStroke();
     p.ellipse(0, 0, r * 2, r * 2);
     p.pop();
 
     // wedge
     if (rr > 0.001) {
-      p.push(); p.translate(c.cx, c.cy);
+      p.push(); p.translate(cx, cy);
       p.fill(wCol(pr)); p.noStroke();
       p.arc(0, 0, r * 2, r * 2, -p.HALF_PI - rr * p.TWO_PI, -p.HALF_PI);
       p.pop();
@@ -80,13 +89,13 @@ registerSketch('sk3', function (p) {
 
     // white inner
     let ir = r * 0.7;
-    p.push(); p.translate(c.cx, c.cy);
+    p.push(); p.translate(cx, cy);
     p.fill(255); p.noStroke();
     p.ellipse(0, 0, ir * 2, ir * 2);
     p.pop();
 
     // particles
-    p.push(); p.translate(c.cx, c.cy);
+    p.push(); p.translate(cx, cy);
     pSets[i].forEach(d => {
       let px = p.cos(-p.HALF_PI - d.a) * d.rf * r;
       let py = p.sin(-p.HALF_PI - d.a) * d.rf * r;
@@ -101,7 +110,7 @@ registerSketch('sk3', function (p) {
     p.pop();
 
     // ticks
-    p.push(); p.translate(c.cx, c.cy);
+    p.push(); p.translate(cx, cy);
     for (let h = 0; h < 12; h++) {
       let a = (h / 12) * p.TWO_PI - p.HALF_PI;
       let main = h % 3 === 0;
@@ -116,7 +125,7 @@ registerSketch('sk3', function (p) {
 
     // hand
     let ha = rm <= 0 ? -p.HALF_PI : -p.HALF_PI - rr * p.TWO_PI;
-    p.push(); p.translate(c.cx, c.cy);
+    p.push(); p.translate(cx, cy);
     p.rotate(ha + p.HALF_PI);
     p.stroke(50); p.strokeWeight(3); p.strokeCap(p.ROUND);
     p.line(0, 0, 0, -r * 0.72);
@@ -125,18 +134,26 @@ registerSketch('sk3', function (p) {
     p.pop();
 
     // 12 marker
-    p.push(); p.translate(c.cx, c.cy);
+    p.push(); p.translate(cx, cy);
     p.fill(220, 50, 50); p.noStroke();
     p.triangle(-5, -r * 0.82, 5, -r * 0.82, 0, -r * 0.72);
     p.pop();
 
-    // center + countdown
-    p.push(); p.translate(c.cx, c.cy);
+    // center + countdown with pulse
+    p.push(); p.translate(cx, cy);
     p.fill(60); p.noStroke(); p.ellipse(0, 0, 8, 8);
     p.fill(255); p.ellipse(0, 0, 3, 3);
-    p.fill(rm <= 0 ? p.color(220, 40, 40) : 50);
+
     p.textAlign(p.CENTER, p.CENTER);
     p.textStyle(p.BOLD); p.textSize(p.min(ir * 0.38, 20));
+    if (pr >= 0.9 && rm > 0) {
+      let pulse = p.map(p.sin(p.frameCount * 0.15), -1, 1, 140, 255);
+      p.fill(220, 60, 50, pulse);
+    } else if (rm <= 0) {
+      p.fill(220, 40, 40);
+    } else {
+      p.fill(50);
+    }
     p.text(fmt(rm), 0, ir * 0.15);
     p.pop();
 
@@ -170,7 +187,6 @@ registerSketch('sk3', function (p) {
     p.fill(150); p.textSize(11);
     p.text('bigger = higher priority \u00b7 click to cycle \u00b7 particles drain as time passes', 400, 90);
 
-    // hover detection
     hoveredClock = -1;
     for (let i = 0; i < 3; i++) {
       if (p.dist(p.mouseX, p.mouseY, clocks[i].cx, clocks[i].cy) < priSizes[priorities[i]]) {
@@ -178,7 +194,6 @@ registerSketch('sk3', function (p) {
       }
     }
 
-    // draw smallest first so bigger clocks overlap on top
     let order = [0, 1, 2].sort((a, b) => priSizes[priorities[a]] - priSizes[priorities[b]]);
     order.forEach(i => drawClock(i));
 
