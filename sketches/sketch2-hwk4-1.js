@@ -11,6 +11,9 @@ registerSketch('sk2', function (p) {
   let slices = [];
   let hoveredSlice = -1;
   let activeSlice = -1;
+  let countdownSeconds = 0;
+  let countdownRunning = false;
+  let lastMillis = 0;
 
   p.setup = function () {
     p.createCanvas(CANVAS_SIZE, CANVAS_SIZE);
@@ -22,6 +25,13 @@ registerSketch('sk2', function (p) {
       angle += sweep;
     });
   };
+
+  function startCountdown(i) {
+    activeSlice = i;
+    countdownSeconds = agenda[i].minutes * 60;
+    countdownRunning = true;
+    lastMillis = p.millis();
+  }
 
   function getSliceAt(px, py) {
     const dx = px - cx, dy = py - cy;
@@ -41,6 +51,18 @@ registerSketch('sk2', function (p) {
 
   p.draw = function () {
     p.background(248);
+
+    // tick countdown using millis()
+    if (countdownRunning) {
+      const now = p.millis();
+      countdownSeconds -= (now - lastMillis) / 1000;
+      lastMillis = now;
+      if (countdownSeconds <= 0) {
+        countdownSeconds = 0;
+        countdownRunning = false;
+      }
+    }
+
     hoveredSlice = getSliceAt(p.mouseX, p.mouseY);
 
     slices.forEach((sl, i) => {
@@ -84,12 +106,22 @@ registerSketch('sk2', function (p) {
     p.fill(120); p.textSize(12); p.textStyle(p.NORMAL);
     p.text('conference room  ·  team leads  ·  workplace', cx, 68);
 
-    if (activeSlice >= 0) {
-      p.fill(40); p.textSize(13); p.textStyle(p.NORMAL);
-      p.text('Now: ' + slices[activeSlice].label, cx, cy + R + 20);
+    // countdown display
+    const boxY = cy + R + 28;
+    p.fill(255); p.stroke(200); p.strokeWeight(1);
+    p.rect(cx - 160, boxY, 320, 88, 10);
+    p.noStroke(); p.textAlign(p.CENTER, p.CENTER);
+
+    if (activeSlice < 0) {
+      p.fill(160); p.textSize(14); p.textStyle(p.NORMAL);
+      p.text('click any section to start', cx, boxY + 44);
     } else {
-      p.fill(160); p.textSize(13); p.textStyle(p.NORMAL);
-      p.text('click any section to start', cx, cy + R + 20);
+      const mins = Math.floor(countdownSeconds / 60);
+      const secs = Math.floor(countdownSeconds % 60);
+      p.fill(80); p.textSize(13); p.textStyle(p.NORMAL);
+      p.text(slices[activeSlice].label + '  ·  ' + agenda[activeSlice].minutes + ' min total', cx, boxY + 22);
+      p.fill(30); p.textSize(36); p.textStyle(p.BOLD);
+      p.text(p.nf(mins, 2) + ' : ' + p.nf(secs, 2), cx, boxY + 58);
     }
 
     p.noFill(); p.stroke(0); p.strokeWeight(1);
@@ -99,7 +131,7 @@ registerSketch('sk2', function (p) {
   p.mousePressed = function () {
     const clicked = getSliceAt(p.mouseX, p.mouseY);
     if (clicked === -1) return;
-    activeSlice = clicked;
+    startCountdown(clicked);
   };
 
   p.windowResized = function () { p.resizeCanvas(CANVAS_SIZE, CANVAS_SIZE); };
