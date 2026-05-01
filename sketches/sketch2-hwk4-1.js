@@ -12,6 +12,7 @@ registerSketch('sk2', function (p) {
 
   p.setup = function () {
     p.createCanvas(CANVAS_SIZE, CANVAS_SIZE);
+    p.textFont('sans-serif');
     let angle = p.TWO_PI * 0.75;
     agenda.forEach(a => {
       const sweep = (a.minutes / totalMinutes) * p.TWO_PI;
@@ -22,12 +23,39 @@ registerSketch('sk2', function (p) {
 
   p.draw = function () {
     p.background(248);
+
     slices.forEach(sl => {
       p.fill(sl.col[0], sl.col[1], sl.col[2], 140);
       p.stroke(255);
       p.strokeWeight(2);
       p.arc(cx, cy, R * 2, R * 2, sl.start, sl.end, p.PIE);
     });
+
+    slices.forEach(sl => {
+      const mid = (sl.start + sl.end) / 2;
+      const lx = cx + Math.cos(mid) * R * 0.65;
+      const ly = cy + Math.sin(mid) * R * 0.65;
+      p.noStroke(); p.fill(60);
+      p.textSize(15); p.textStyle(p.BOLD);
+      p.textAlign(p.CENTER, p.CENTER);
+      p.text(sl.label, lx, ly);
+      p.textSize(12); p.textStyle(p.NORMAL); p.fill(90);
+      p.text(sl.minutes + ' min', lx, ly + 20);
+    });
+
+    p.fill(255); p.stroke(60); p.strokeWeight(2);
+    p.ellipse(cx, cy, 22, 22);
+    p.fill(30); p.noStroke();
+    p.ellipse(cx, cy, 8, 8);
+
+    p.noStroke(); p.fill(30);
+    p.textSize(22); p.textStyle(p.BOLD);
+    p.textAlign(p.CENTER, p.CENTER);
+    p.text('Meeting Agenda Clock', cx, 44);
+
+    p.fill(120); p.textSize(12); p.textStyle(p.NORMAL);
+    p.text('conference room  ·  team leads  ·  workplace', cx, 68);
+
     p.noFill(); p.stroke(0); p.strokeWeight(1);
     p.rect(0, 0, p.width - 1, p.height - 1);
   };
