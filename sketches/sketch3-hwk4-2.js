@@ -33,20 +33,20 @@ registerSketch('sk3', function (p) {
   function drawClock(i) {
     let c = clocks[i], rm = rem(c), pr = prog(c), rr = 1 - pr;
 
-    // outer ring tinted by progress
+    // outer ring
     p.push(); p.translate(c.cx, c.cy);
     let rc = wCol(pr); rc.setAlpha(40);
     p.fill(rc); p.stroke(wCol(pr)); p.strokeWeight(2);
     p.ellipse(0, 0, r * 2 + 12, r * 2 + 12);
     p.pop();
 
-    // grey background (elapsed)
+    // grey bg
     p.push(); p.translate(c.cx, c.cy);
     p.fill(225); p.noStroke();
     p.ellipse(0, 0, r * 2, r * 2);
     p.pop();
 
-    // colored wedge (remaining)
+    // colored wedge
     if (rr > 0.001) {
       p.push(); p.translate(c.cx, c.cy);
       p.fill(wCol(pr)); p.noStroke();
@@ -54,14 +54,14 @@ registerSketch('sk3', function (p) {
       p.pop();
     }
 
-    // white inner face
+    // white inner
     let ir = r * 0.7;
     p.push(); p.translate(c.cx, c.cy);
     p.fill(255); p.noStroke();
     p.ellipse(0, 0, ir * 2, ir * 2);
     p.pop();
 
-    // tick marks
+    // ticks
     p.push(); p.translate(c.cx, c.cy);
     for (let h = 0; h < 12; h++) {
       let a = (h / 12) * p.TWO_PI - p.HALF_PI;
@@ -73,6 +73,22 @@ registerSketch('sk3', function (p) {
         p.cos(a) * r * 0.98, p.sin(a) * r * 0.98
       );
     }
+    p.pop();
+
+    // hand pointing to wedge edge
+    let ha = rm <= 0 ? -p.HALF_PI : -p.HALF_PI - rr * p.TWO_PI;
+    p.push(); p.translate(c.cx, c.cy);
+    p.rotate(ha + p.HALF_PI);
+    p.stroke(50); p.strokeWeight(3); p.strokeCap(p.ROUND);
+    p.line(0, 0, 0, -r * 0.72);
+    p.fill(50); p.noStroke();
+    p.triangle(-3, -r * 0.68, 3, -r * 0.68, 0, -r * 0.78);
+    p.pop();
+
+    // red 12-o'clock deadline marker
+    p.push(); p.translate(c.cx, c.cy);
+    p.fill(220, 50, 50); p.noStroke();
+    p.triangle(-5, -r * 0.82, 5, -r * 0.82, 0, -r * 0.72);
     p.pop();
 
     // center dot + countdown
@@ -102,6 +118,8 @@ registerSketch('sk3', function (p) {
     p.text('Work Clock', 400, 46);
     p.fill(120); p.textSize(12); p.textStyle(p.NORMAL);
     p.text('office — task deadline tracker', 400, 70);
+    p.fill(150); p.textSize(11);
+    p.text('hand sweeps to red triangle = deadline', 400, 90);
 
     for (let i = 0; i < 3; i++) drawClock(i);
 
@@ -123,9 +141,8 @@ registerSketch('sk3', function (p) {
       );
     });
 
-    // legend
     p.fill(150); p.textSize(11);
-    p.text('wedge color shifts green \u2192 amber \u2192 red as deadline approaches', 400, 620);
+    p.text('wedge = time left \u00b7 hand sweeps to red triangle = deadline', 400, 620);
     let ly = 650;
     p.noStroke(); p.textSize(10);
     p.fill(80,190,110); p.rect(280,ly,12,12,3); p.fill(80); p.text('>50%',314,ly+6);
