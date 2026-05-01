@@ -14,7 +14,8 @@ registerSketch('sk3', function (p) {
     p.textFont('sans-serif');
   };
 
-  function rem(c) { return p.max(0, c.end - Date.now()); }
+  function rem(c)  { return p.max(0, c.end - Date.now()); }
+  function prog(c) { return p.constrain(1 - rem(c) / c.dl, 0, 1); }
 
   function fmt(ms) {
     if (ms <= 0) return 'DUE!';
@@ -24,14 +25,31 @@ registerSketch('sk3', function (p) {
   }
 
   function drawClock(i) {
-    let c = clocks[i], rm = rem(c);
+    let c = clocks[i], rm = rem(c), pr = prog(c), rr = 1 - pr;
 
-    // white face
+    // grey background (elapsed)
     p.push(); p.translate(c.cx, c.cy);
-    p.fill(255); p.stroke(180); p.strokeWeight(1.5);
+    p.fill(225); p.noStroke();
     p.ellipse(0, 0, r * 2, r * 2);
+    p.pop();
 
-    // 12 tick marks
+    // green wedge (remaining)
+    if (rr > 0.001) {
+      p.push(); p.translate(c.cx, c.cy);
+      p.fill(80, 190, 110); p.noStroke();
+      p.arc(0, 0, r * 2, r * 2, -p.HALF_PI - rr * p.TWO_PI, -p.HALF_PI);
+      p.pop();
+    }
+
+    // white inner face (donut hole)
+    let ir = r * 0.7;
+    p.push(); p.translate(c.cx, c.cy);
+    p.fill(255); p.noStroke();
+    p.ellipse(0, 0, ir * 2, ir * 2);
+    p.pop();
+
+    // tick marks
+    p.push(); p.translate(c.cx, c.cy);
     for (let h = 0; h < 12; h++) {
       let a = (h / 12) * p.TWO_PI - p.HALF_PI;
       let main = h % 3 === 0;
@@ -42,16 +60,16 @@ registerSketch('sk3', function (p) {
         p.cos(a) * r * 0.98, p.sin(a) * r * 0.98
       );
     }
+    p.pop();
 
-    // center dot
-    p.fill(60); p.noStroke();
-    p.ellipse(0, 0, 8, 8);
-
-    // countdown text
+    // center dot + countdown
+    p.push(); p.translate(c.cx, c.cy);
+    p.fill(60); p.noStroke(); p.ellipse(0, 0, 8, 8);
+    p.fill(255); p.ellipse(0, 0, 3, 3);
     p.fill(rm <= 0 ? p.color(220, 40, 40) : 50);
     p.textAlign(p.CENTER, p.CENTER);
-    p.textStyle(p.BOLD); p.textSize(20);
-    p.text(fmt(rm), 0, 0);
+    p.textStyle(p.BOLD); p.textSize(p.min(ir * 0.38, 20));
+    p.text(fmt(rm), 0, ir * 0.15);
     p.pop();
 
     // labels
@@ -66,7 +84,6 @@ registerSketch('sk3', function (p) {
   p.draw = function () {
     p.background(245);
 
-    // title
     p.noStroke(); p.fill(30);
     p.textSize(24); p.textStyle(p.BOLD); p.textAlign(p.CENTER, p.CENTER);
     p.text('Work Clock', 400, 46);
@@ -75,7 +92,6 @@ registerSketch('sk3', function (p) {
 
     for (let i = 0; i < 3; i++) drawClock(i);
 
-    // current time
     p.noStroke(); p.fill(80);
     p.textSize(11); p.textAlign(p.CENTER, p.CENTER);
     p.text('Current Time', 400, 530);
@@ -85,7 +101,6 @@ registerSketch('sk3', function (p) {
       400, 558
     );
 
-    // due times
     p.fill(120); p.textSize(11); p.textStyle(p.NORMAL);
     clocks.forEach(c => {
       let d = new Date(c.end);
@@ -95,7 +110,6 @@ registerSketch('sk3', function (p) {
       );
     });
 
-    // border
     p.noFill(); p.stroke(0); p.strokeWeight(1);
     p.rect(0, 0, p.width - 1, p.height - 1);
   };
