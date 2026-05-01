@@ -52,7 +52,6 @@ registerSketch('sk2', function (p) {
   p.draw = function () {
     p.background(248);
 
-    // tick countdown using millis()
     if (countdownRunning) {
       const now = p.millis();
       countdownSeconds -= (now - lastMillis) / 1000;
@@ -65,24 +64,57 @@ registerSketch('sk2', function (p) {
 
     hoveredSlice = getSliceAt(p.mouseX, p.mouseY);
 
+    // base slices
     slices.forEach((sl, i) => {
       let alpha = 140;
-      if (i === activeSlice) alpha = 235;
-      else if (i === hoveredSlice) alpha = 200;
+      if (i === hoveredSlice && i !== activeSlice) alpha = 200;
       p.fill(sl.col[0], sl.col[1], sl.col[2], alpha);
-      if (i === activeSlice)       p.stroke(40, 40, 40);
-      else if (i === hoveredSlice) p.stroke(120, 120, 120);
-      else                         p.stroke(255);
-      p.strokeWeight(i === activeSlice ? 3 : 2);
+      if (i === hoveredSlice) p.stroke(120, 120, 120);
+      else                    p.stroke(255);
+      p.strokeWeight(2);
       p.arc(cx, cy, R * 2, R * 2, sl.start, sl.end, p.PIE);
     });
 
+    // active slice — used/remaining split
+    if (activeSlice >= 0) {
+      const sl = slices[activeSlice];
+      const c = sl.col;
+      const totalSec = agenda[activeSlice].minutes * 60;
+      const remainProgress = p.constrain(countdownSeconds / totalSec, 0, 1);
+      const usedProgress = 1 - remainProgress;
+      const usedEnd = sl.start + usedProgress * (sl.end - sl.start);
+
+      // used — dark grey
+      if (usedProgress > 0) {
+        p.fill(60, 60, 60, 230);
+        p.noStroke();
+        p.arc(cx, cy, R * 2, R * 2, sl.start, usedEnd, p.PIE);
+      }
+
+      // remaining — bright color
+      if (remainProgress > 0) {
+        p.fill(c[0], c[1], c[2], 240);
+        p.noStroke();
+        p.arc(cx, cy, R * 2, R * 2, usedEnd, sl.end, p.PIE);
+      }
+
+      p.noFill(); p.stroke(40, 40, 40); p.strokeWeight(3);
+      p.arc(cx, cy, R * 2, R * 2, sl.start, sl.end, p.PIE);
+    }
+
+    // labels
     slices.forEach((sl, i) => {
       const mid = (sl.start + sl.end) / 2;
       const lx = cx + Math.cos(mid) * R * 0.65;
       const ly = cy + Math.sin(mid) * R * 0.65;
       p.noStroke();
-      p.fill(i === activeSlice ? 20 : 60);
+      if (i === activeSlice) {
+        const totalSec = agenda[activeSlice].minutes * 60;
+        const usedProgress = 1 - p.constrain(countdownSeconds / totalSec, 0, 1);
+        p.fill(usedProgress > 0.5 ? 255 : 20);
+      } else {
+        p.fill(60);
+      }
       p.textSize(i === activeSlice ? 18 : 15);
       p.textStyle(p.BOLD);
       p.textAlign(p.CENTER, p.CENTER);
@@ -106,7 +138,6 @@ registerSketch('sk2', function (p) {
     p.fill(120); p.textSize(12); p.textStyle(p.NORMAL);
     p.text('conference room  ·  team leads  ·  workplace', cx, 68);
 
-    // countdown display
     const boxY = cy + R + 28;
     p.fill(255); p.stroke(200); p.strokeWeight(1);
     p.rect(cx - 160, boxY, 320, 88, 10);
