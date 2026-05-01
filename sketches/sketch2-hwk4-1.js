@@ -37,7 +37,7 @@ registerSketch('sk2', function (p) {
 
   function getSliceAt(px, py) {
     const dx = px - cx, dy = py - cy;
-    if (Math.sqrt(dx*dx + dy*dy) > R) return -1;
+    if (Math.sqrt(dx * dx + dy * dy) > R) return -1;
     let a = Math.atan2(dy, dx);
     if (a < 0) a += p.TWO_PI;
     for (let i = 0; i < slices.length; i++) {
@@ -79,7 +79,7 @@ registerSketch('sk2', function (p) {
       p.arc(cx, cy, R * 2, R * 2, sl.start, sl.end, p.PIE);
     });
 
-    // active slice split
+    // active slice — used/remaining split
     if (activeSlice >= 0) {
       const sl = slices[activeSlice];
       const c = sl.col;
@@ -118,14 +118,16 @@ registerSketch('sk2', function (p) {
       p.text(sl.minutes + ' min', lx, ly + 20);
     });
 
+    // center dot
     p.fill(255); p.stroke(60); p.strokeWeight(2);
     p.ellipse(cx, cy, 22, 22);
     p.fill(30); p.noStroke(); p.ellipse(cx, cy, 8, 8);
 
+    // outer ring
     p.noFill(); p.stroke(180); p.strokeWeight(1.5);
     p.ellipse(cx, cy, R * 2 + 6, R * 2 + 6);
 
-    // ── real time using hour() minute() second() ──
+    // real time
     p.noStroke(); p.fill(130);
     p.textSize(12); p.textStyle(p.NORMAL);
     p.textAlign(p.CENTER, p.CENTER);
@@ -134,6 +136,7 @@ registerSketch('sk2', function (p) {
       cx, cy + R + 14
     );
 
+    // title
     p.noStroke(); p.fill(30); p.textSize(22); p.textStyle(p.BOLD);
     p.textAlign(p.CENTER, p.CENTER);
     p.text('Meeting Agenda Clock', cx, 44);
@@ -153,7 +156,10 @@ registerSketch('sk2', function (p) {
       const mins = Math.floor(countdownSeconds / 60);
       const secs = Math.floor(countdownSeconds % 60);
       p.fill(80); p.textSize(13); p.textStyle(p.NORMAL);
-      p.text(slices[activeSlice].label + '  ·  ' + agenda[activeSlice].minutes + ' min total', cx, boxY + 22);
+      p.text(
+        slices[activeSlice].label + '  ·  ' + agenda[activeSlice].minutes + ' min total',
+        cx, boxY + 22
+      );
       if (overrunSlice === activeSlice) {
         p.fill(200, 50, 50); p.textSize(32); p.textStyle(p.BOLD);
         p.text('TIME UP', cx, boxY + 58);
@@ -163,15 +169,28 @@ registerSketch('sk2', function (p) {
       }
     }
 
-    if (activeSlice >= 0 && !countdownRunning && overrunSlice !== activeSlice) {
-      p.noStroke(); p.fill(100); p.textSize(11); p.textStyle(p.NORMAL);
-      p.textAlign(p.CENTER, p.CENTER);
+    // hover hint above box
+    p.noStroke(); p.textAlign(p.CENTER, p.CENTER);
+    if (hoveredSlice >= 0 && hoveredSlice !== activeSlice) {
+      p.fill(80); p.textSize(11); p.textStyle(p.NORMAL);
+      p.text(
+        'click to start ' + slices[hoveredSlice].label +
+        ' (' + agenda[hoveredSlice].minutes + ' min)',
+        cx, boxY - 10
+      );
+    } else if (activeSlice >= 0 && !countdownRunning && overrunSlice !== activeSlice) {
+      p.fill(100); p.textSize(11); p.textStyle(p.NORMAL);
       p.text('paused — click same section to restart', cx, boxY - 10);
     }
 
+    // bottom hint
     p.fill(160); p.textSize(11); p.textStyle(p.NORMAL);
-    p.text('click any section to start  ·  click same section to pause', cx, CANVAS_SIZE - 16);
+    p.text(
+      'click any section to start  ·  click same section to pause',
+      cx, CANVAS_SIZE - 16
+    );
 
+    // border frame
     p.noFill(); p.stroke(0); p.strokeWeight(1);
     p.rect(0, 0, p.width - 1, p.height - 1);
   };
