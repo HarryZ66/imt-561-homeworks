@@ -10,6 +10,7 @@ registerSketch('sk2', function (p) {
   const cx = 400, cy = 370, R = 255;
   let slices = [];
   let hoveredSlice = -1;
+  let activeSlice = -1;
 
   p.setup = function () {
     p.createCanvas(CANVAS_SIZE, CANVAS_SIZE);
@@ -43,19 +44,25 @@ registerSketch('sk2', function (p) {
     hoveredSlice = getSliceAt(p.mouseX, p.mouseY);
 
     slices.forEach((sl, i) => {
-      let alpha = i === hoveredSlice ? 210 : 140;
+      let alpha = 140;
+      if (i === activeSlice) alpha = 235;
+      else if (i === hoveredSlice) alpha = 200;
       p.fill(sl.col[0], sl.col[1], sl.col[2], alpha);
-      p.stroke(i === hoveredSlice ? p.color(120,120,120) : p.color(255));
-      p.strokeWeight(2);
+      if (i === activeSlice)       p.stroke(40, 40, 40);
+      else if (i === hoveredSlice) p.stroke(120, 120, 120);
+      else                         p.stroke(255);
+      p.strokeWeight(i === activeSlice ? 3 : 2);
       p.arc(cx, cy, R * 2, R * 2, sl.start, sl.end, p.PIE);
     });
 
-    slices.forEach(sl => {
+    slices.forEach((sl, i) => {
       const mid = (sl.start + sl.end) / 2;
       const lx = cx + Math.cos(mid) * R * 0.65;
       const ly = cy + Math.sin(mid) * R * 0.65;
-      p.noStroke(); p.fill(60);
-      p.textSize(15); p.textStyle(p.BOLD);
+      p.noStroke();
+      p.fill(i === activeSlice ? 20 : 60);
+      p.textSize(i === activeSlice ? 18 : 15);
+      p.textStyle(p.BOLD);
       p.textAlign(p.CENTER, p.CENTER);
       p.text(sl.label, lx, ly);
       p.textSize(12); p.textStyle(p.NORMAL); p.fill(90);
@@ -67,6 +74,9 @@ registerSketch('sk2', function (p) {
     p.fill(30); p.noStroke();
     p.ellipse(cx, cy, 8, 8);
 
+    p.noFill(); p.stroke(180); p.strokeWeight(1.5);
+    p.ellipse(cx, cy, R * 2 + 6, R * 2 + 6);
+
     p.noStroke(); p.fill(30);
     p.textSize(22); p.textStyle(p.BOLD);
     p.textAlign(p.CENTER, p.CENTER);
@@ -74,8 +84,22 @@ registerSketch('sk2', function (p) {
     p.fill(120); p.textSize(12); p.textStyle(p.NORMAL);
     p.text('conference room  ·  team leads  ·  workplace', cx, 68);
 
+    if (activeSlice >= 0) {
+      p.fill(40); p.textSize(13); p.textStyle(p.NORMAL);
+      p.text('Now: ' + slices[activeSlice].label, cx, cy + R + 20);
+    } else {
+      p.fill(160); p.textSize(13); p.textStyle(p.NORMAL);
+      p.text('click any section to start', cx, cy + R + 20);
+    }
+
     p.noFill(); p.stroke(0); p.strokeWeight(1);
     p.rect(0, 0, p.width - 1, p.height - 1);
+  };
+
+  p.mousePressed = function () {
+    const clicked = getSliceAt(p.mouseX, p.mouseY);
+    if (clicked === -1) return;
+    activeSlice = clicked;
   };
 
   p.windowResized = function () { p.resizeCanvas(CANVAS_SIZE, CANVAS_SIZE); };
