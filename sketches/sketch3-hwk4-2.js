@@ -17,6 +17,12 @@ registerSketch('sk3', function (p) {
   function rem(c)  { return p.max(0, c.end - Date.now()); }
   function prog(c) { return p.constrain(1 - rem(c) / c.dl, 0, 1); }
 
+  function wCol(pr) {
+    if (pr < 0.5) return p.lerpColor(p.color(80,190,110), p.color(230,180,50), pr/0.5);
+    if (pr < 0.8) return p.lerpColor(p.color(230,180,50), p.color(220,65,50), (pr-0.5)/0.3);
+    return p.color(220, 65, 50);
+  }
+
   function fmt(ms) {
     if (ms <= 0) return 'DUE!';
     let s = Math.ceil(ms / 1000), m = Math.floor(s / 60), h = Math.floor(m / 60);
@@ -27,21 +33,28 @@ registerSketch('sk3', function (p) {
   function drawClock(i) {
     let c = clocks[i], rm = rem(c), pr = prog(c), rr = 1 - pr;
 
+    // outer ring tinted by progress
+    p.push(); p.translate(c.cx, c.cy);
+    let rc = wCol(pr); rc.setAlpha(40);
+    p.fill(rc); p.stroke(wCol(pr)); p.strokeWeight(2);
+    p.ellipse(0, 0, r * 2 + 12, r * 2 + 12);
+    p.pop();
+
     // grey background (elapsed)
     p.push(); p.translate(c.cx, c.cy);
     p.fill(225); p.noStroke();
     p.ellipse(0, 0, r * 2, r * 2);
     p.pop();
 
-    // green wedge (remaining)
+    // colored wedge (remaining)
     if (rr > 0.001) {
       p.push(); p.translate(c.cx, c.cy);
-      p.fill(80, 190, 110); p.noStroke();
+      p.fill(wCol(pr)); p.noStroke();
       p.arc(0, 0, r * 2, r * 2, -p.HALF_PI - rr * p.TWO_PI, -p.HALF_PI);
       p.pop();
     }
 
-    // white inner face (donut hole)
+    // white inner face
     let ir = r * 0.7;
     p.push(); p.translate(c.cx, c.cy);
     p.fill(255); p.noStroke();
@@ -109,6 +122,15 @@ registerSketch('sk3', function (p) {
         c.cx, 590
       );
     });
+
+    // legend
+    p.fill(150); p.textSize(11);
+    p.text('wedge color shifts green \u2192 amber \u2192 red as deadline approaches', 400, 620);
+    let ly = 650;
+    p.noStroke(); p.textSize(10);
+    p.fill(80,190,110); p.rect(280,ly,12,12,3); p.fill(80); p.text('>50%',314,ly+6);
+    p.fill(230,180,50);  p.rect(350,ly,12,12,3); p.fill(80); p.text('20\u201350%',392,ly+6);
+    p.fill(220,65,50);   p.rect(430,ly,12,12,3); p.fill(80); p.text('<20%',462,ly+6);
 
     p.noFill(); p.stroke(0); p.strokeWeight(1);
     p.rect(0, 0, p.width - 1, p.height - 1);
