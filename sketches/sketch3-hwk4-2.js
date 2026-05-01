@@ -1,20 +1,24 @@
 registerSketch('sk3', function (p) {
   const CANVAS_SIZE = 800;
+  let priorities = [0, 1, 2];
+  const priSizes = [130, 100, 75];
+  const priLabel = ['HIGH', 'MID', 'LOW'];
+  const priCol = [[220,60,60], [200,140,40], [60,120,200]];
+
   const clocks = [
     { cx:200, cy:350, dl:5*6e4,   unit:'5 MIN', name:'Design' },
     { cx:400, cy:350, dl:5*36e5,  unit:'5 HR',  name:'Review' },
     { cx:600, cy:350, dl:10*36e5, unit:'10 HR', name:'Deploy' },
   ];
-  const r = 110;
   const t0 = Date.now();
   clocks.forEach(c => c.end = t0 + c.dl);
 
   const pSets = [];
+  let hoveredClock = -1;
 
   p.setup = function () {
     p.createCanvas(CANVAS_SIZE, CANVAS_SIZE);
     p.textFont('sans-serif');
-    // generate particles for each clock
     clocks.forEach(() => {
       let d = [];
       for (let j = 0; j < 60; j++) {
@@ -42,7 +46,9 @@ registerSketch('sk3', function (p) {
   }
 
   function drawClock(i) {
-    let c = clocks[i], rm = rem(c), pr = prog(c), rr = 1 - pr;
+    let c = clocks[i], pri = priorities[i], r = priSizes[pri];
+    let rm = rem(c), pr = prog(c), rr = 1 - pr;
+    let hov = hoveredClock === i, bc = priCol[pri];
 
     // update particles
     let aliveAngle = rr * p.TWO_PI;
@@ -53,8 +59,8 @@ registerSketch('sk3', function (p) {
 
     // outer ring
     p.push(); p.translate(c.cx, c.cy);
-    let rc = wCol(pr); rc.setAlpha(40);
-    p.fill(rc); p.stroke(wCol(pr)); p.strokeWeight(2);
+    let rc = wCol(pr); rc.setAlpha(hov ? 80 : 40);
+    p.fill(rc); p.stroke(hov ? p.color(50,100,200) : wCol(pr)); p.strokeWeight(2);
     p.ellipse(0, 0, r * 2 + 12, r * 2 + 12);
     p.pop();
 
@@ -64,7 +70,7 @@ registerSketch('sk3', function (p) {
     p.ellipse(0, 0, r * 2, r * 2);
     p.pop();
 
-    // colored wedge
+    // wedge
     if (rr > 0.001) {
       p.push(); p.translate(c.cx, c.cy);
       p.fill(wCol(pr)); p.noStroke();
@@ -102,7 +108,7 @@ registerSketch('sk3', function (p) {
       p.stroke(main ? 80 : 180);
       p.strokeWeight(main ? 2.5 : 1);
       p.line(
-        p.cos(a) * r * 0.82, p.sin(a) * r * 0.82,
+        p.cos(a) * r * (main ? 0.82 : 0.88), p.sin(a) * r * (main ? 0.82 : 0.88),
         p.cos(a) * r * 0.98, p.sin(a) * r * 0.98
       );
     }
@@ -136,10 +142,20 @@ registerSketch('sk3', function (p) {
 
     // labels
     p.push(); p.noStroke(); p.textAlign(p.CENTER, p.CENTER);
+    p.fill(bc[0], bc[1], bc[2]);
+    p.rect(c.cx - 28, c.cy - r - 50, 56, 20, 6);
+    p.fill(255); p.textSize(11); p.textStyle(p.BOLD);
+    p.text(priLabel[pri], c.cx, c.cy - r - 40);
+    p.fill(bc[0], bc[1], bc[2], 160);
+    p.rect(c.cx - 22, c.cy - r - 28, 44, 16, 4);
+    p.fill(255); p.textSize(9);
+    p.text(c.unit, c.cx, c.cy - r - 20);
     p.fill(100); p.textSize(12); p.textStyle(p.NORMAL);
     p.text(c.name, c.cx, c.cy + r + 20);
-    p.fill(80); p.textSize(10);
-    p.text(c.unit, c.cx, c.cy - r - 16);
+    if (hov) {
+      p.fill(80); p.textSize(10);
+      p.text('click to change priority', c.cx, c.cy + r + 36);
+    }
     p.pop();
   }
 
@@ -152,9 +168,19 @@ registerSketch('sk3', function (p) {
     p.fill(120); p.textSize(12); p.textStyle(p.NORMAL);
     p.text('office — task deadline tracker', 400, 70);
     p.fill(150); p.textSize(11);
-    p.text('particles drain as time passes', 400, 90);
+    p.text('bigger = higher priority \u00b7 click to cycle \u00b7 particles drain as time passes', 400, 90);
 
-    for (let i = 0; i < 3; i++) drawClock(i);
+    // hover detection
+    hoveredClock = -1;
+    for (let i = 0; i < 3; i++) {
+      if (p.dist(p.mouseX, p.mouseY, clocks[i].cx, clocks[i].cy) < priSizes[priorities[i]]) {
+        hoveredClock = i;
+      }
+    }
+
+    // draw smallest first so bigger clocks overlap on top
+    let order = [0, 1, 2].sort((a, b) => priSizes[priorities[a]] - priSizes[priorities[b]]);
+    order.forEach(i => drawClock(i));
 
     p.noStroke(); p.fill(80);
     p.textSize(11); p.textAlign(p.CENTER, p.CENTER);
@@ -184,6 +210,15 @@ registerSketch('sk3', function (p) {
 
     p.noFill(); p.stroke(0); p.strokeWeight(1);
     p.rect(0, 0, p.width - 1, p.height - 1);
+  };
+
+  p.mousePressed = function () {
+    for (let i = 0; i < 3; i++) {
+      if (p.dist(p.mouseX, p.mouseY, clocks[i].cx, clocks[i].cy) < priSizes[priorities[i]]) {
+        priorities[i] = (priorities[i] + 1) % 3;
+        break;
+      }
+    }
   };
 
   p.windowResized = function () { p.resizeCanvas(CANVAS_SIZE, CANVAS_SIZE); };
