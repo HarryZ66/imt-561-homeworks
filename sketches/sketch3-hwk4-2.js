@@ -9,9 +9,20 @@ registerSketch('sk3', function (p) {
   const t0 = Date.now();
   clocks.forEach(c => c.end = t0 + c.dl);
 
+  const pSets = [];
+
   p.setup = function () {
     p.createCanvas(CANVAS_SIZE, CANVAS_SIZE);
     p.textFont('sans-serif');
+    // generate particles for each clock
+    clocks.forEach(() => {
+      let d = [];
+      for (let j = 0; j < 60; j++) {
+        d.push({ a: p.random(p.TWO_PI), rf: p.random(0.72, 0.96), alive: true, fade: 1 });
+      }
+      d.sort((a, b) => a.a - b.a);
+      pSets.push(d);
+    });
   };
 
   function rem(c)  { return p.max(0, c.end - Date.now()); }
@@ -32,6 +43,13 @@ registerSketch('sk3', function (p) {
 
   function drawClock(i) {
     let c = clocks[i], rm = rem(c), pr = prog(c), rr = 1 - pr;
+
+    // update particles
+    let aliveAngle = rr * p.TWO_PI;
+    pSets[i].forEach(d => {
+      if (d.alive && d.a > aliveAngle) { d.alive = false; d.fade = 1; }
+      if (!d.alive) d.fade = p.max(0, d.fade - 0.03);
+    });
 
     // outer ring
     p.push(); p.translate(c.cx, c.cy);
@@ -61,6 +79,21 @@ registerSketch('sk3', function (p) {
     p.ellipse(0, 0, ir * 2, ir * 2);
     p.pop();
 
+    // particles
+    p.push(); p.translate(c.cx, c.cy);
+    pSets[i].forEach(d => {
+      let px = p.cos(-p.HALF_PI - d.a) * d.rf * r;
+      let py = p.sin(-p.HALF_PI - d.a) * d.rf * r;
+      if (d.alive) {
+        p.fill(255, 255, 255, 200); p.noStroke();
+        p.ellipse(px, py, 5, 5);
+      } else if (d.fade > 0) {
+        p.fill(180, 180, 180, d.fade * 180); p.noStroke();
+        p.ellipse(px, py + (1 - d.fade) * 8, 4, 4);
+      }
+    });
+    p.pop();
+
     // ticks
     p.push(); p.translate(c.cx, c.cy);
     for (let h = 0; h < 12; h++) {
@@ -75,7 +108,7 @@ registerSketch('sk3', function (p) {
     }
     p.pop();
 
-    // hand pointing to wedge edge
+    // hand
     let ha = rm <= 0 ? -p.HALF_PI : -p.HALF_PI - rr * p.TWO_PI;
     p.push(); p.translate(c.cx, c.cy);
     p.rotate(ha + p.HALF_PI);
@@ -85,13 +118,13 @@ registerSketch('sk3', function (p) {
     p.triangle(-3, -r * 0.68, 3, -r * 0.68, 0, -r * 0.78);
     p.pop();
 
-    // red 12-o'clock deadline marker
+    // 12 marker
     p.push(); p.translate(c.cx, c.cy);
     p.fill(220, 50, 50); p.noStroke();
     p.triangle(-5, -r * 0.82, 5, -r * 0.82, 0, -r * 0.72);
     p.pop();
 
-    // center dot + countdown
+    // center + countdown
     p.push(); p.translate(c.cx, c.cy);
     p.fill(60); p.noStroke(); p.ellipse(0, 0, 8, 8);
     p.fill(255); p.ellipse(0, 0, 3, 3);
@@ -119,7 +152,7 @@ registerSketch('sk3', function (p) {
     p.fill(120); p.textSize(12); p.textStyle(p.NORMAL);
     p.text('office — task deadline tracker', 400, 70);
     p.fill(150); p.textSize(11);
-    p.text('hand sweeps to red triangle = deadline', 400, 90);
+    p.text('particles drain as time passes', 400, 90);
 
     for (let i = 0; i < 3; i++) drawClock(i);
 
@@ -142,7 +175,7 @@ registerSketch('sk3', function (p) {
     });
 
     p.fill(150); p.textSize(11);
-    p.text('wedge = time left \u00b7 hand sweeps to red triangle = deadline', 400, 620);
+    p.text('wedge = time left \u00b7 dots = remaining \u00b7 fading = elapsed', 400, 620);
     let ly = 650;
     p.noStroke(); p.textSize(10);
     p.fill(80,190,110); p.rect(280,ly,12,12,3); p.fill(80); p.text('>50%',314,ly+6);
