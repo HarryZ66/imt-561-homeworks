@@ -11,6 +11,7 @@ registerSketch('sk2', function (p) {
   let slices = [];
   let hoveredSlice = -1;
   let activeSlice = -1;
+  let overrunSlice = -1;
   let countdownSeconds = 0;
   let countdownRunning = false;
   let lastMillis = 0;
@@ -31,6 +32,7 @@ registerSketch('sk2', function (p) {
     countdownSeconds = agenda[i].minutes * 60;
     countdownRunning = true;
     lastMillis = p.millis();
+    overrunSlice = -1;
   }
 
   function getSliceAt(px, py) {
@@ -59,6 +61,7 @@ registerSketch('sk2', function (p) {
       if (countdownSeconds <= 0) {
         countdownSeconds = 0;
         countdownRunning = false;
+        overrunSlice = activeSlice;
       }
     }
 
@@ -69,13 +72,14 @@ registerSketch('sk2', function (p) {
       let alpha = 140;
       if (i === hoveredSlice && i !== activeSlice) alpha = 200;
       p.fill(sl.col[0], sl.col[1], sl.col[2], alpha);
-      if (i === hoveredSlice) p.stroke(120, 120, 120);
-      else                    p.stroke(255);
+      if (i === overrunSlice)      p.stroke(255, 60, 60);
+      else if (i === hoveredSlice) p.stroke(120, 120, 120);
+      else                         p.stroke(255);
       p.strokeWeight(2);
       p.arc(cx, cy, R * 2, R * 2, sl.start, sl.end, p.PIE);
     });
 
-    // active slice — used/remaining split
+    // active slice split
     if (activeSlice >= 0) {
       const sl = slices[activeSlice];
       const c = sl.col;
@@ -84,20 +88,14 @@ registerSketch('sk2', function (p) {
       const usedProgress = 1 - remainProgress;
       const usedEnd = sl.start + usedProgress * (sl.end - sl.start);
 
-      // used — dark grey
       if (usedProgress > 0) {
-        p.fill(60, 60, 60, 230);
-        p.noStroke();
+        p.fill(60, 60, 60, 230); p.noStroke();
         p.arc(cx, cy, R * 2, R * 2, sl.start, usedEnd, p.PIE);
       }
-
-      // remaining — bright color
       if (remainProgress > 0) {
-        p.fill(c[0], c[1], c[2], 240);
-        p.noStroke();
+        p.fill(c[0], c[1], c[2], 240); p.noStroke();
         p.arc(cx, cy, R * 2, R * 2, usedEnd, sl.end, p.PIE);
       }
-
       p.noFill(); p.stroke(40, 40, 40); p.strokeWeight(3);
       p.arc(cx, cy, R * 2, R * 2, sl.start, sl.end, p.PIE);
     }
@@ -109,35 +107,31 @@ registerSketch('sk2', function (p) {
       const ly = cy + Math.sin(mid) * R * 0.65;
       p.noStroke();
       if (i === activeSlice) {
-        const totalSec = agenda[activeSlice].minutes * 60;
-        const usedProgress = 1 - p.constrain(countdownSeconds / totalSec, 0, 1);
+        const usedProgress = 1 - p.constrain(countdownSeconds / (agenda[i].minutes * 60), 0, 1);
         p.fill(usedProgress > 0.5 ? 255 : 20);
-      } else {
-        p.fill(60);
-      }
+      } else { p.fill(60); }
       p.textSize(i === activeSlice ? 18 : 15);
-      p.textStyle(p.BOLD);
-      p.textAlign(p.CENTER, p.CENTER);
+      p.textStyle(p.BOLD); p.textAlign(p.CENTER, p.CENTER);
       p.text(sl.label, lx, ly);
-      p.textSize(12); p.textStyle(p.NORMAL); p.fill(90);
+      p.textSize(12); p.textStyle(p.NORMAL);
+      p.fill(i === overrunSlice ? p.color(200, 50, 50) : 90);
       p.text(sl.minutes + ' min', lx, ly + 20);
     });
 
     p.fill(255); p.stroke(60); p.strokeWeight(2);
     p.ellipse(cx, cy, 22, 22);
-    p.fill(30); p.noStroke();
-    p.ellipse(cx, cy, 8, 8);
+    p.fill(30); p.noStroke(); p.ellipse(cx, cy, 8, 8);
 
     p.noFill(); p.stroke(180); p.strokeWeight(1.5);
     p.ellipse(cx, cy, R * 2 + 6, R * 2 + 6);
 
-    p.noStroke(); p.fill(30);
-    p.textSize(22); p.textStyle(p.BOLD);
+    p.noStroke(); p.fill(30); p.textSize(22); p.textStyle(p.BOLD);
     p.textAlign(p.CENTER, p.CENTER);
     p.text('Meeting Agenda Clock', cx, 44);
     p.fill(120); p.textSize(12); p.textStyle(p.NORMAL);
     p.text('conference room  ·  team leads  ·  workplace', cx, 68);
 
+    // countdown box
     const boxY = cy + R + 28;
     p.fill(255); p.stroke(200); p.strokeWeight(1);
     p.rect(cx - 160, boxY, 320, 88, 10);
@@ -151,9 +145,25 @@ registerSketch('sk2', function (p) {
       const secs = Math.floor(countdownSeconds % 60);
       p.fill(80); p.textSize(13); p.textStyle(p.NORMAL);
       p.text(slices[activeSlice].label + '  ·  ' + agenda[activeSlice].minutes + ' min total', cx, boxY + 22);
-      p.fill(30); p.textSize(36); p.textStyle(p.BOLD);
-      p.text(p.nf(mins, 2) + ' : ' + p.nf(secs, 2), cx, boxY + 58);
+
+      if (overrunSlice === activeSlice) {
+        p.fill(200, 50, 50); p.textSize(32); p.textStyle(p.BOLD);
+        p.text('TIME UP', cx, boxY + 58);
+      } else {
+        p.fill(30); p.textSize(36); p.textStyle(p.BOLD);
+        p.text(p.nf(mins, 2) + ' : ' + p.nf(secs, 2), cx, boxY + 58);
+      }
     }
+
+    // pause hint
+    if (activeSlice >= 0 && !countdownRunning && overrunSlice !== activeSlice) {
+      p.noStroke(); p.fill(100); p.textSize(11); p.textStyle(p.NORMAL);
+      p.textAlign(p.CENTER, p.CENTER);
+      p.text('paused — click same section to restart', cx, boxY - 10);
+    }
+
+    p.fill(160); p.textSize(11); p.textStyle(p.NORMAL);
+    p.text('click any section to start  ·  click same section to pause', cx, CANVAS_SIZE - 16);
 
     p.noFill(); p.stroke(0); p.strokeWeight(1);
     p.rect(0, 0, p.width - 1, p.height - 1);
@@ -162,7 +172,13 @@ registerSketch('sk2', function (p) {
   p.mousePressed = function () {
     const clicked = getSliceAt(p.mouseX, p.mouseY);
     if (clicked === -1) return;
-    startCountdown(clicked);
+    if (clicked === activeSlice && countdownRunning) {
+      countdownRunning = false;
+    } else if (clicked === activeSlice && !countdownRunning) {
+      startCountdown(clicked);
+    } else {
+      startCountdown(clicked);
+    }
   };
 
   p.windowResized = function () { p.resizeCanvas(CANVAS_SIZE, CANVAS_SIZE); };
