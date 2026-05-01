@@ -125,6 +125,15 @@ registerSketch('sk2', function (p) {
     p.noFill(); p.stroke(180); p.strokeWeight(1.5);
     p.ellipse(cx, cy, R * 2 + 6, R * 2 + 6);
 
+    // ── real time using hour() minute() second() ──
+    p.noStroke(); p.fill(130);
+    p.textSize(12); p.textStyle(p.NORMAL);
+    p.textAlign(p.CENTER, p.CENTER);
+    p.text(
+      p.nf(p.hour(), 2) + ':' + p.nf(p.minute(), 2) + ':' + p.nf(p.second(), 2),
+      cx, cy + R + 14
+    );
+
     p.noStroke(); p.fill(30); p.textSize(22); p.textStyle(p.BOLD);
     p.textAlign(p.CENTER, p.CENTER);
     p.text('Meeting Agenda Clock', cx, 44);
@@ -145,7 +154,6 @@ registerSketch('sk2', function (p) {
       const secs = Math.floor(countdownSeconds % 60);
       p.fill(80); p.textSize(13); p.textStyle(p.NORMAL);
       p.text(slices[activeSlice].label + '  ·  ' + agenda[activeSlice].minutes + ' min total', cx, boxY + 22);
-
       if (overrunSlice === activeSlice) {
         p.fill(200, 50, 50); p.textSize(32); p.textStyle(p.BOLD);
         p.text('TIME UP', cx, boxY + 58);
@@ -155,7 +163,6 @@ registerSketch('sk2', function (p) {
       }
     }
 
-    // pause hint
     if (activeSlice >= 0 && !countdownRunning && overrunSlice !== activeSlice) {
       p.noStroke(); p.fill(100); p.textSize(11); p.textStyle(p.NORMAL);
       p.textAlign(p.CENTER, p.CENTER);
