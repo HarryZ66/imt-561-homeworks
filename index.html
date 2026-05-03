@@ -16,12 +16,8 @@
       aria-pressed="false">Hide tabs</button>
     <nav id="main-tabs" class="tabs" role="tablist" aria-label="Main tabs">
       <button type="button" class="tab-btn active" data-target="tab1" role="tab" aria-selected="true">Welcome</button>
-
-      <!-- Homework 4 -->
       <button type="button" class="tab-btn" data-target="tab2" data-sketch="sk2" role="tab">HWK 4.1</button>
       <button type="button" class="tab-btn" data-target="tab3" data-sketch="sk3" role="tab">HWK 4.2</button>
-
-      <!-- Examples -->
       <button type="button" class="tab-btn" data-target="tab5" data-sketch="sk5" role="tab">Ex 1</button>
       <button type="button" class="tab-btn" data-target="tab6" data-sketch="sk6" role="tab">Ex 2</button>
       <button type="button" class="tab-btn" data-target="tab8" data-sketch="sk8" role="tab">Ex 3</button>
@@ -37,87 +33,88 @@
       <button type="button" class="tab-btn" data-target="tab15" data-sketch="sk15" role="tab">HWK 5</button>
     </nav>
 
-    <!-- Welcome: Homepage -->
+    <!-- Welcome -->
     <section id="tab1" class="tab-content active" role="tabpanel">
       <div class="welcome-template" aria-labelledby="welcome-title">
         <h2 id="welcome-title">Welcome to My IMT 561 Portfolio</h2>
-
         <div class="welcome-profile">
           <div class="welcome-photo" role="img" aria-label="Photo of Harry Zhang">
-  <img src="images/HarryZ.jpg" alt="Photo of Harry Zhang" />
-</div>
-
+            <img src="images/HarryZ.jpg" alt="Photo of Harry Zhang" />
+          </div>
           <div class="welcome-copy">
-          <p><strong>Harry Zhang</strong> (he/him)</p>
-          <p>I am a master's student in MSIM (Information Management), focused on AI agent and ML/DS.</p>
-          <p>This quarter I want to get better at interaction design and dynamic data visualization.</p>
-          <p>One dataset or topic I am excited to visualize is sport's player and game data, because it reveals how does player's personal effort affect games and how games focus in different years.</p>
-        </div>
+            <p><strong>Harry Zhang</strong> (he/him)</p>
+            <p>I am a master's student in MSIM (Information Management), focused on AI agent and ML/DS.</p>
+            <p>This quarter I want to get better at interaction design and dynamic data visualization.</p>
+            <p>One dataset or topic I am excited to visualize is sport's player and game data, because it reveals how does player's personal effort affect games and how games focus in different years.</p>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- Homework 4: Sketch 1 -->
+    <!-- HWK 4.1 — Meeting Agenda Clock -->
     <section id="tab2" class="tab-content" role="tabpanel">
       <div id="sketch-container-sk2" class="sketch-container"></div>
       <div id="sketch-drawing-sk2" class="sketch-evolution">
         <div class="welcome-template hwk-template" aria-labelledby="sk2-notes-title">
           <h3 id="sk2-notes-title">Documenting iterative process</h3>
-          <p class="small-note">Replace placeholders with your own notes and images.</p>
           <p>
             Context of use: Both clocks are designed for office and workshop environments where teams juggle multiple tasks with different deadlines. They would be displayed on a shared screen or personal dashboard, helping team members visually track how much time remains for each task without switching to a separate timer app. The core problem they solve is making deadline urgency immediately perceptible at a glance.
           </p>
-<article class="clock-template">
-  <h4>Final Clock 1 — Meeting Agenda Clock</h4>
-  <p class="small-note">Sketch iteration documentation (paper/hand-drawn photos)</p>
-  <div class="iteration-grid">
-    <figure class="iteration-item">
-      <img src="images/clock1-sketch1.jpg" alt="Clock 1 original sketch" />
-    </figure>
-    <figure class="iteration-item">
-      <img src="images/clock1-sketch2.jpg" alt="Clock 1 iteration sketch" />
-    </figure>
-  </div>
-              Design process: The Meeting Agenda Clock started as a simple pie chart divided by agenda sections. In the first iteration, I added color-coded slices so each meeting phase (Intro, Discussion, Wrap-up, Q&amp;A) is visually distinct — applying the principle of categorical color encoding for preattentive identification. The second major decision was adding a real-time countdown with a used/remaining shadow split on the active slice: the dark region grows as time elapses, giving an immediate sense of how much of the current section has been consumed. This leverages the area-ratio channel, which is perceptually effective for proportion judgments. Finally, I added click-to-start interaction and hover highlights, making the visualization responsive and discoverable without cluttering the display.
+          <article class="clock-template">
+            <h4>Final Clock 1 — Meeting Agenda Clock</h4>
+            <p class="small-note">Sketch iteration documentation (paper/hand-drawn photos)</p>
+            <div class="iteration-grid">
+              <figure class="iteration-item">
+                <img src="images/clock1-sketch1.jpg" alt="Clock 1 original sketch" />
+              </figure>
+              <figure class="iteration-item">
+                <img src="images/clock1-sketch2.jpg" alt="Clock 1 iteration sketch" />
+              </figure>
+            </div>
+            <p>
+              Design process: The Meeting Agenda Clock began as a simple pie chart divided by agenda sections. In an early version, all slices were the same neutral grey — a classmate gave feedback that it was impossible to tell which section was active at a glance. This led to the first key decision: categorical color encoding, assigning each meeting phase (Intro, Discussion, Wrap-up, Q&amp;A) a distinct hue for preattentive identification, meaning users recognize the active section within 200ms without conscious counting. The second iteration added a real-time countdown with a used/remaining shadow split: the dark region grows as time elapses, leveraging the area-ratio perceptual channel, which research shows is effective for proportion judgments. A peer reviewer noted that the shadow effect was too subtle at first — I increased the contrast to fill(60, 60, 60, 230) so the consumed portion is immediately obvious even in peripheral vision. Finally, I added click-to-start interaction and hover highlights, applying the principle of direct manipulation: users act on the visual object itself rather than a separate control, reducing cognitive load in a live meeting context.
             </p>
             <p>
               Self-reflection / future work: First, I would add audio cues or a subtle flash when a section's time runs out, since the current "TIME UP" text is easy to miss if the user is not looking at the screen. Second, I would allow users to customize the number and duration of agenda sections, making the clock adaptable to different meeting formats beyond the fixed 4-section layout.
             </p>
           </article>
+        </div>
+      </div>
     </section>
 
-    <!-- Homework 4: Sketch 1 -->
+    <!-- HWK 4.2 — Work Clock -->
     <section id="tab3" class="tab-content" role="tabpanel">
       <div id="sketch-container-sk3" class="sketch-container"></div>
       <div id="sketch-drawing-sk3" class="sketch-evolution">
         <div class="welcome-template hwk-template" aria-labelledby="sk3-notes-title">
           <h3 id="sk3-notes-title">Documenting iterative process</h3>
-          <p class="small-note">Replace placeholders with your own notes and images.</p>
           <p>
-<p>
             Context of use: The Work Clock is designed for individual knowledge workers — designers, developers, project managers — who track multiple task deadlines simultaneously throughout a workday. It would live on a second monitor or a browser tab, providing ambient awareness of approaching deadlines. The kitchen-timer metaphor makes urgency intuitive: a shrinking colored wedge is universally understood as "time running out."
           </p>
-
           <article class="clock-template">
             <h4>Final Clock 2 — Work Clock</h4>
             <p class="small-note">Sketch iteration documentation (paper/hand-drawn photos)</p>
             <div class="iteration-grid">
               <figure class="iteration-item">
-                <!-- <img src="images/clock2-sketch1.jpg" alt="Clock 2 sketch iteration 1" /> -->
-                <div class="image-placeholder">Clock 2 sketch photo 1</div>
+                <img src="images/clock2-sketch1.jpg" alt="Clock 2 original gear sketch" />
               </figure>
               <figure class="iteration-item">
-                <!-- <img src="images/clock2-sketch2.jpg" alt="Clock 2 sketch iteration 2" /> -->
-                <div class="image-placeholder">Clock 2 sketch photo 2</div>
+                <img src="images/clock2-sketch2.jpg" alt="Clock 2 iteration with priority sizing" />
               </figure>
             </div>
             <p>
-              Design process: This clock went through several major iterations. It began as a gear-based design, but feedback revealed that rotating gears obscured the clock hands and made it hard to read actual time. I pivoted to a clean kitchen-timer donut layout where a colored wedge shrinks counter-clockwise toward a red 12-o'clock marker. The key encoding decisions were: (1) redundant color mapping — the wedge transitions from green (&gt;50% remaining) through amber (20–50%) to red (&lt;20%), leveraging the natural green-safe / red-danger association; (2) particle drain — 60 white dots in the donut ring disappear one by one as time passes, providing a discrete-change signal that is easier to notice peripherally than a smooth arc shrinking, consistent with preattentive processing theory; (3) size encodes priority — clicking a clock cycles its priority (HIGH/MID/LOW), which changes the clock radius, creating a clear visual hierarchy where the most urgent task dominates the layout.
+              Design process: The Work Clock went through three major structural iterations, each driven by feedback. The first version used rotating gears (sketch 5) — a friend who tested it said the spinning motion made the clock hands unreadable and the design felt more decorative than functional. This feedback directly motivated the pivot to a cleaner circular layout. The second iteration used three fixed clocks with shrinking arcs, but a second reviewer noted there was no way to know which task was most urgent — all three clocks looked equally important. This led to the third key decision: size encodes priority. Clicking a clock cycles it through HIGH / MID / LOW states, changing its radius so the most urgent task visually dominates the layout. This applies the size preattentive channel — larger objects draw attention first without requiring conscious comparison. Color redundantly reinforces the same hierarchy: red for HIGH urgency, amber for MID, blue for LOW, exploiting the culturally universal red-danger / blue-calm association. The smooth rotation driven by frameCount rather than second() was a technical decision made after observing that second()-based motion created jarring one-second jumps — frameCount produces continuous, fluid motion that feels alive and responsive, consistent with the goal of making the visualization feel dynamic.
             </p>
             <p>
-              Self-reflection / future work: First, I would add the ability to reset or customize deadlines via a simple input field, since the current deadlines are hardcoded at page load. Second, I would explore adding a subtle sound or browser notification when a task hits the &lt;10% threshold, because the shake animation is effective visually but can be missed if the tab is in the background.
+              Self-reflection / future work: First, I would add the ability to reset or customize deadlines via a simple input field, since the current deadlines are hardcoded at page load. Second, I would explore adding a subtle sound or browser notification when a task hits the low priority threshold, because visual changes alone can be missed if the user is focused on another window.
             </p>
           </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- Examples -->
+    <section id="tab5" class="tab-content" role="tabpanel">
       <div id="sketch-container-sk5" class="sketch-container"></div>
     </section>
 
@@ -167,50 +164,25 @@
             by Raizel Lagunero —
             <a href="https://github.com/lagunra/interactive_info_vis_474/blob/main/sketches/sketch4.js" target="_blank" rel="noopener noreferrer">source code</a>
           </p>
-          <p>
-            Context of use: This clock is based on a bookshelf that adds to the cozy, focused ambiance of studying.
-          </p>
-
+          <p>Context of use: This clock is based on a bookshelf that adds to the cozy, focused ambiance of studying.</p>
           <article class="clock-template">
             <h4>Ex 10</h4>
-            <p>
-              Design process: Each shelf represents either the hour, minute, or second of the day. The number of books
-              per shelf represents that amount, and the potted plant shows the time for quick understanding. The
-              background color represents AM and PM by light and dark shades, respectively, helping users intuitively
-              recognize the time while maintaining a relaxed study atmosphere. This design is meant to be used as a
-              background webpage to use while studying.
-            </p>
-            <p>
-              Self-reflection / future work: Improve this design by adding more visual details, textures, and lighting
-              effects that enhance a peaceful and studious scene.
-            </p>
+            <p>Design process: Each shelf represents either the hour, minute, or second of the day. The number of books per shelf represents that amount, and the potted plant shows the time for quick understanding. The background color represents AM and PM by light and dark shades, respectively, helping users intuitively recognize the time while maintaining a relaxed study atmosphere.</p>
+            <p>Self-reflection / future work: Improve this design by adding more visual details, textures, and lighting effects that enhance a peaceful and studious scene.</p>
           </article>
-
           <h4>Sketch evolution</h4>
           <div class="iteration-grid">
             <figure class="iteration-item">
               <img src="images/lagunra/sk4-evolution-1.png" alt="Ex 10 sketch evolution step 1" />
-              <figcaption>
-                Step 1 — This sketch depicts timer that is represented by books on a bookshelf. It had features of
-                representing a student's classes and the amount of time that was studied per class. However, this design
-                was too cluttered and did not fit the ambiant visualization that I had envisioned.
-              </figcaption>
+              <figcaption>Step 1 — initial bookshelf timer concept</figcaption>
             </figure>
             <figure class="iteration-item">
               <img src="images/lagunra/sk4-evolution-2.png" alt="Ex 10 sketch evolution step 2" />
-              <figcaption>
-                Step 2 — I simplified the design to only include three simple bookshelves, and instead of a timer, I
-                implemented a clock. However, I recieved feedback that it was difficult to immediately count how many
-                books were in each shelf, and it the clock did not show whether it was in the AM or PM.
-              </figcaption>
+              <figcaption>Step 2 — simplified to three bookshelves</figcaption>
             </figure>
             <figure class="iteration-item">
               <img src="images/lagunra/sk4-evolution-3.png" alt="Ex 10 sketch evolution step 3" />
-              <figcaption>
-                Step 3 — I added numeric labels on potted plants at the end of each shelf to allow the user to quickly
-                understand what time it was. I also added a background feature that reflected what time of day it is;
-                light background represents AM, and dark represents PM.
-              </figcaption>
+              <figcaption>Step 3 — added numeric labels and AM/PM background</figcaption>
             </figure>
           </div>
         </div>
@@ -226,42 +198,17 @@
             by Yongxi Chen —
             <a href="https://github.com/yongxi1202/interactive_info_vis/blob/main/sketches/sketch2.js" target="_blank" rel="noopener noreferrer">source code</a>
           </p>
-          <p>
-            Context of use: This sketch represents the rhythm of box breathing, a meditation technique used to calm
-            the mind and reduce stress by maintaining a steady 4-4-4-4 breathing cycle: breathe in, hold, breathe out,
-            hold. It is designed for mindfulness practice, stress management sessions, and focus exercises where users
-            need visual and temporal guidance to regulate their breathing.
-          </p>
-
+          <p>Context of use: This sketch represents the rhythm of box breathing, a meditation technique used to calm the mind and reduce stress by maintaining a steady 4-4-4-4 breathing cycle.</p>
           <article class="clock-template">
             <h4>Ex 11</h4>
-            <p>
-              Design process:
-            </p>
+            <p>Design process:</p>
             <ol>
-              <li>
-                <strong>Square path visualization:</strong> The breathing cycle is represented by a square with four
-                edges, where each edge corresponds to one breathing phase. A colored line progressively draws around
-                the square, providing clear visual tracking of the 4-second intervals. The square shape reinforces the
-                "box breathing" concept.
-              </li>
-              <li>
-                <strong>Color-coded phases:</strong> Each of the four phases uses a distinct teal-to-gray gradient
-                color (teal for inhale, light blue for first hold, mint for exhale, gray for second hold).
-              </li>
-              <li>
-                <strong>Countdown timer with neon glow:</strong> Large text displays the current phase label. The neon
-                glow effect on the lines creates a calming, modern aesthetic while maintaining high visibility against
-                the starry background.
-              </li>
+              <li><strong>Square path visualization:</strong> The breathing cycle is represented by a square with four edges, where each edge corresponds to one breathing phase.</li>
+              <li><strong>Color-coded phases:</strong> Each of the four phases uses a distinct teal-to-gray gradient color.</li>
+              <li><strong>Countdown timer with neon glow:</strong> Large text displays the current phase label with a calming neon glow effect.</li>
             </ol>
-            <p>
-              Self-reflection / future work: Add customizable breathing durations (e.g., 3-3-3-3 or 5-5-5-5 cycles) to
-              accommodate different skill levels. Include audio cues or gentle sound at phase transitions to support
-              eyes-closed practice.
-            </p>
+            <p>Self-reflection / future work: Add customizable breathing durations and audio cues for eyes-closed practice.</p>
           </article>
-
           <h4>Sketch evolution</h4>
           <div class="iteration-grid">
             <figure class="iteration-item">
@@ -290,38 +237,12 @@
             by Teresa Wang —
             <a href="https://github.com/TeresaWww/interactive_info_vis/blob/main/sketches/sketch2.js" target="_blank" rel="noopener noreferrer">source code</a>
           </p>
-          <p>
-            Context: This clock is designed for people who love making pancakes. It works as a fun, visual timer to use
-            while cooking, helping users track how long their pancakes have been frying through animation and color
-            changes.
-          </p>
-
+          <p>Context: This clock is designed for people who love making pancakes, helping users track frying time through animation and color changes.</p>
           <article class="clock-template">
             <h4>Ex 12</h4>
-            <p>
-              Design process: For my pancake clock, I designed the layout as a pancake cooking simulator. It shows a
-              pan frying pancakes and then dropping them onto a plate, which makes the whole clock feel like a small
-              kitchen scene. The animation was an intentional choice because it imitates a real cooking environment and
-              makes the passage of time more visual and engaging.
-            </p>
-            <p>
-              The color change of the pancakes is another key design choice. They start light and gradually turn golden
-              brown as time passes. This helps people understand how long the pancake has been cooking without needing
-              to read numbers, giving a more natural sense of time. I also added a countdown counter below the plate to
-              give users a clear, easy-to-read time reference, balancing fun visuals with functional feedback.
-            </p>
-            <p>
-              Since I wasn’t able to hand-draw detailed pancakes due to limited time, the visuals could have looked
-              more polished if I had more time to refine them. I also chose warm, high-contrast colors (browns and
-              yellows) for better visibility and accessibility.
-            </p>
-            <p>
-              Self-reflection / future work: In the future, I would like to add more realistic pancake textures and
-              steam effects to make the cooking scene feel livelier. I also plan to add features like letting users
-              flip the pancakes with a click to include simple interactivity.
-            </p>
+            <p>Design process: The pancake clock shows a pan frying pancakes then dropping them onto a plate. Pancakes start light and gradually turn golden brown as time passes. A countdown counter below the plate gives users a clear time reference.</p>
+            <p>Self-reflection / future work: Add more realistic pancake textures and steam effects, and let users flip the pancakes with a click.</p>
           </article>
-
           <h4>Sketch evolution</h4>
           <div class="iteration-grid">
             <figure class="iteration-item">
@@ -341,7 +262,7 @@
       </div>
     </section>
 
-    <!-- Homework 5 -->
+    <!-- HWK 5 -->
     <section id="tab15" class="tab-content" role="tabpanel">
       <div id="sketch-container-sk15" class="sketch-container"></div>
       <div id="sketch-drawing-sk15" class="sketch-evolution">
