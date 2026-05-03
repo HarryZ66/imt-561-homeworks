@@ -65,33 +65,25 @@
           <h3 id="sk2-notes-title">Documenting iterative process</h3>
           <p class="small-note">Replace placeholders with your own notes and images.</p>
           <p>
-            Context of use: Explain where your clocks/timers would be used, by whom, and what problem they help solve. [add 2-3 sentences]
+            Context of use: Both clocks are designed for office and workshop environments where teams juggle multiple tasks with different deadlines. They would be displayed on a shared screen or personal dashboard, helping team members visually track how much time remains for each task without switching to a separate timer app. The core problem they solve is making deadline urgency immediately perceptible at a glance.
           </p>
-
-          <article class="clock-template">
-            <h4>Final Clock 1</h4>
-            <p class="small-note">Sketch iteration documentation (paper/hand-drawn photos)</p>
-            <div class="iteration-grid">
-              <figure class="iteration-item">
-                <!-- <img src="images/clock1-sketch1.jpg" alt="Clock 1 sketch iteration 1" /> -->
-                <div class="image-placeholder">Clock 1 sketch photo 1</div>
-              </figure>
-              <figure class="iteration-item">
-                <!-- <img src="images/clock1-sketch2.jpg" alt="Clock 1 sketch iteration 2" /> -->
-                <div class="image-placeholder">Clock 1 sketch photo 2</div>
-              </figure>
-            </div>
-            <p>
-              Design process: In 1–2 paragraphs (or bullet points), explain how this clock evolved from sketches to final
-              form. Name the information visualization principles you applied (readability, hierarchy, color, layout,
-              interaction, accessibility). [mention 2-3 design decisions and why]
+<article class="clock-template">
+  <h4>Final Clock 1 — Meeting Agenda Clock</h4>
+  <p class="small-note">Sketch iteration documentation (paper/hand-drawn photos)</p>
+  <div class="iteration-grid">
+    <figure class="iteration-item">
+      <img src="images/clock1-sketch1.jpg" alt="Clock 1 original sketch" />
+    </figure>
+    <figure class="iteration-item">
+      <img src="images/clock1-sketch2.jpg" alt="Clock 1 iteration sketch" />
+    </figure>
+  </div>
+              Design process: The Meeting Agenda Clock started as a simple pie chart divided by agenda sections. In the first iteration, I added color-coded slices so each meeting phase (Intro, Discussion, Wrap-up, Q&amp;A) is visually distinct — applying the principle of categorical color encoding for preattentive identification. The second major decision was adding a real-time countdown with a used/remaining shadow split on the active slice: the dark region grows as time elapses, giving an immediate sense of how much of the current section has been consumed. This leverages the area-ratio channel, which is perceptually effective for proportion judgments. Finally, I added click-to-start interaction and hover highlights, making the visualization responsive and discoverable without cluttering the display.
             </p>
             <p>
-              Self-reflection / future work: What would you improve next, and why? [add two improvements you'd make and explain why]
+              Self-reflection / future work: First, I would add audio cues or a subtle flash when a section's time runs out, since the current "TIME UP" text is easy to miss if the user is not looking at the screen. Second, I would allow users to customize the number and duration of agenda sections, making the clock adaptable to different meeting formats beyond the fixed 4-section layout.
             </p>
           </article>
-        </div>
-      </div>
     </section>
 
     <!-- Homework 4: Sketch 1 -->
@@ -102,11 +94,12 @@
           <h3 id="sk3-notes-title">Documenting iterative process</h3>
           <p class="small-note">Replace placeholders with your own notes and images.</p>
           <p>
-            Context of use: Explain where your clocks/timers would be used, by whom, and what problem they help solve. [add 2-3 sentences]
+<p>
+            Context of use: The Work Clock is designed for individual knowledge workers — designers, developers, project managers — who track multiple task deadlines simultaneously throughout a workday. It would live on a second monitor or a browser tab, providing ambient awareness of approaching deadlines. The kitchen-timer metaphor makes urgency intuitive: a shrinking colored wedge is universally understood as "time running out."
           </p>
 
           <article class="clock-template">
-            <h4>Final Clock 2</h4>
+            <h4>Final Clock 2 — Work Clock</h4>
             <p class="small-note">Sketch iteration documentation (paper/hand-drawn photos)</p>
             <div class="iteration-grid">
               <figure class="iteration-item">
@@ -119,19 +112,12 @@
               </figure>
             </div>
             <p>
-              Design process: In 1–2 paragraphs (or bullet points), explain your iterations and final decisions. Make
-              explicit which visualization considerations shaped the result. [mention 2-3 design decisions and why]
+              Design process: This clock went through several major iterations. It began as a gear-based design, but feedback revealed that rotating gears obscured the clock hands and made it hard to read actual time. I pivoted to a clean kitchen-timer donut layout where a colored wedge shrinks counter-clockwise toward a red 12-o'clock marker. The key encoding decisions were: (1) redundant color mapping — the wedge transitions from green (&gt;50% remaining) through amber (20–50%) to red (&lt;20%), leveraging the natural green-safe / red-danger association; (2) particle drain — 60 white dots in the donut ring disappear one by one as time passes, providing a discrete-change signal that is easier to notice peripherally than a smooth arc shrinking, consistent with preattentive processing theory; (3) size encodes priority — clicking a clock cycles its priority (HIGH/MID/LOW), which changes the clock radius, creating a clear visual hierarchy where the most urgent task dominates the layout.
             </p>
             <p>
-              Self-reflection / future work: What would you improve next, and why? [add two improvements you'd make and explain why]
+              Self-reflection / future work: First, I would add the ability to reset or customize deadlines via a simple input field, since the current deadlines are hardcoded at page load. Second, I would explore adding a subtle sound or browser notification when a task hits the &lt;10% threshold, because the shake animation is effective visually but can be missed if the tab is in the background.
             </p>
           </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- Examples -->
-    <section id="tab5" class="tab-content" role="tabpanel">
       <div id="sketch-container-sk5" class="sketch-container"></div>
     </section>
 
