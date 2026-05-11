@@ -67,7 +67,6 @@ registerSketch('sk2', function (p) {
 
     hoveredSlice = getSliceAt(p.mouseX, p.mouseY);
 
-    // base slices
     slices.forEach((sl, i) => {
       let alpha = 140;
       if (i === hoveredSlice && i !== activeSlice) alpha = 200;
@@ -79,7 +78,6 @@ registerSketch('sk2', function (p) {
       p.arc(cx, cy, R * 2, R * 2, sl.start, sl.end, p.PIE);
     });
 
-    // active slice — used/remaining split
     if (activeSlice >= 0) {
       const sl = slices[activeSlice];
       const c = sl.col;
@@ -100,7 +98,6 @@ registerSketch('sk2', function (p) {
       p.arc(cx, cy, R * 2, R * 2, sl.start, sl.end, p.PIE);
     }
 
-    // labels
     slices.forEach((sl, i) => {
       const mid = (sl.start + sl.end) / 2;
       const lx = cx + Math.cos(mid) * R * 0.65;
@@ -118,16 +115,13 @@ registerSketch('sk2', function (p) {
       p.text(sl.minutes + ' min', lx, ly + 20);
     });
 
-    // center dot
     p.fill(255); p.stroke(60); p.strokeWeight(2);
     p.ellipse(cx, cy, 22, 22);
     p.fill(30); p.noStroke(); p.ellipse(cx, cy, 8, 8);
 
-    // outer ring
     p.noFill(); p.stroke(180); p.strokeWeight(1.5);
     p.ellipse(cx, cy, R * 2 + 6, R * 2 + 6);
 
-    // real time
     p.noStroke(); p.fill(130);
     p.textSize(12); p.textStyle(p.NORMAL);
     p.textAlign(p.CENTER, p.CENTER);
@@ -136,14 +130,12 @@ registerSketch('sk2', function (p) {
       cx, cy + R + 14
     );
 
-    // title
     p.noStroke(); p.fill(30); p.textSize(22); p.textStyle(p.BOLD);
     p.textAlign(p.CENTER, p.CENTER);
     p.text('Meeting Agenda Clock', cx, 44);
     p.fill(120); p.textSize(12); p.textStyle(p.NORMAL);
     p.text('conference room  ·  team leads  ·  workplace', cx, 68);
 
-    // countdown box
     const boxY = cy + R + 28;
     p.fill(255); p.stroke(200); p.strokeWeight(1);
     p.rect(cx - 160, boxY, 320, 88, 10);
@@ -169,7 +161,6 @@ registerSketch('sk2', function (p) {
       }
     }
 
-    // hover hint above box
     p.noStroke(); p.textAlign(p.CENTER, p.CENTER);
     if (hoveredSlice >= 0 && hoveredSlice !== activeSlice) {
       p.fill(80); p.textSize(11); p.textStyle(p.NORMAL);
@@ -183,14 +174,12 @@ registerSketch('sk2', function (p) {
       p.text('paused — click same section to restart', cx, boxY - 10);
     }
 
-    // bottom hint
     p.fill(160); p.textSize(11); p.textStyle(p.NORMAL);
     p.text(
       'click any section to start  ·  click same section to pause',
       cx, CANVAS_SIZE - 16
     );
 
-    // border frame
     p.noFill(); p.stroke(0); p.strokeWeight(1);
     p.rect(0, 0, p.width - 1, p.height - 1);
   };
