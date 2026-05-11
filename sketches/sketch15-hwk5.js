@@ -233,38 +233,58 @@ registerSketch('sk15', function (p) {
     const px = cx + Math.cos(ang) * r;
     const py = cy + Math.sin(ang) * r;
 
+    // dot at pivot location
     p.fill(240, 175, 60);
     p.noStroke();
     p.ellipse(px, py, 11, 11);
 
-    const labelX = cx + 180;
-    const labelY = 200;
+    // ── annotation box on far-right, well clear of the gold line ──
+    const boxX = 590;
+    const boxY = 105;
+    const boxW = 200;
 
-    p.stroke(255, 200, 100, 120);
+    // background pill so text never collides with anything behind it
+    p.fill(22, 32, 56, 235);
+    p.noStroke();
+    p.rect(boxX - 8, boxY - 8, boxW, 100, 6);
+
+    // accent bar on left edge of the box
+    p.fill(240, 175, 60);
+    p.rect(boxX - 8, boxY - 8, 3, 100);
+
+    // connector line from box to the pivot dot
+    p.stroke(255, 200, 100, 110);
     p.strokeWeight(1);
+    p.drawingContext.setLineDash([3, 4]);
     p.noFill();
-    p.line(px, py, labelX - 6, labelY + 22);
+    p.beginShape();
+    p.vertex(boxX - 8, boxY + 84);
+    p.vertex(px + 60, py - 20);
+    p.vertex(px + 6, py - 4);
+    p.endShape();
+    p.drawingContext.setLineDash([]);
 
+    // label text
     p.noStroke();
     p.fill(220, 60, 60);
     p.textSize(20);
     p.textStyle(p.BOLD);
-    p.textAlign(p.LEFT, p.CENTER);
-    p.text('24.1', labelX, labelY);
+    p.textAlign(p.LEFT, p.TOP);
+    p.text('24.1  3PA', boxX, boxY);
 
     p.fill(240, 175, 60);
     p.textSize(13);
-    p.text("2016", labelX, labelY + 22);
+    p.text('2016', boxX, boxY + 28);
 
     p.fill(240, 240, 245);
     p.textSize(12);
     p.textStyle(p.BOLD);
-    p.text('3PA explosion', labelX, labelY + 42);
+    p.text('3PA explosion', boxX, boxY + 48);
 
     p.fill(150, 160, 180);
     p.textStyle(p.NORMAL);
     p.textSize(11);
-    p.text('Warriors 73-9 season', labelX, labelY + 60);
+    p.text('Warriors 73-9 season', boxX, boxY + 66);
   }
 
   function drawHoverTooltip() {
