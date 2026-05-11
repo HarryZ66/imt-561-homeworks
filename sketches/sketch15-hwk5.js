@@ -4,12 +4,12 @@ registerSketch('sk15', function (p) {
   const CANVAS_H = 800;
 
   const cx = 400;
-  const cy = 470;
+  const cy = 475;
 
   const rBarOuter = 220;
   const rBarInnerMin = 130;
   const rBarInnerMax = 200;
-  const rYearLabels = 252;
+  const rYearLabels = 270;   // moved further out so labels don't sit on the gold line
   const rGold = 305;
   const rGoldMax = 360;
 
@@ -73,24 +73,31 @@ registerSketch('sk15', function (p) {
     drawDial();
     drawTimelineBaseline();
     drawStartEndMarkers();
+    drawElementLegend();
+    drawPivotPointer();
     drawHoverTooltip();
     drawSummaryCards();
     drawCaption();
-    drawLegend();
+    drawBottomHint();
   };
 
   function drawHeader() {
     p.noStroke();
     p.fill(240, 240, 245);
-    p.textSize(32);
+    p.textSize(22);
     p.textStyle(p.BOLD);
     p.textAlign(p.CENTER, p.CENTER);
-    p.text('The Death of the Mid-Range', cx, 38);
+    p.text('NBA Shooting Has Changed', cx, 32);
+
+    p.fill(240, 175, 60);
+    p.textSize(18);
+    p.text('3-Pointers Are Up 156% Since 2000', cx, 60);
 
     p.fill(150, 160, 180);
-    p.textSize(13);
+    p.textSize(12);
     p.textStyle(p.NORMAL);
-    p.text('How the NBA traded the long two for the three  ·  read from left → right', cx, 64);
+    p.text('A 25-year look at how the league traded mid-range shots for threes — and scored more doing it.',
+           cx, 84);
   }
 
   function drawDial() {
@@ -104,21 +111,6 @@ registerSketch('sk15', function (p) {
     drawPtsLine();
     drawPaBars();
     drawYearLabels();
-    drawPivotPointer();
-    drawCenterCaption();
-  }
-
-  function drawCenterCaption() {
-    p.noStroke();
-    p.textAlign(p.CENTER, p.CENTER);
-    p.fill(240, 240, 245);
-    p.textSize(18);
-    p.textStyle(p.BOLD);
-    p.text('As 3PA grew', cx, cy - 50);
-
-    p.fill(240, 175, 60);
-    p.textSize(22);
-    p.text('scoring followed', cx, cy - 22);
   }
 
   function drawPaBars() {
@@ -170,7 +162,6 @@ registerSketch('sk15', function (p) {
     }
     p.endShape();
 
-    // highlight 2012 (lowest scoring) and 2016 (pivot) on the gold line
     const highlight = new Set([2012, 2016]);
     for (const d of sk15_data) {
       if (!highlight.has(d.year)) continue;
@@ -195,42 +186,42 @@ registerSketch('sk15', function (p) {
   }
 
   function drawYearLabels() {
-    p.noStroke();
-    p.fill(200, 210, 225);
-    p.textStyle(p.BOLD);
-    p.textSize(14);
-    p.textAlign(p.CENTER, p.CENTER);
-    // larger gap — only show 3 inner-anchor years; START/END are drawn separately as big markers
+    // small dark plate behind each label so it never appears to be crossed by the gold line
     const ticks = [2008, 2012, 2016, 2020];
     for (const yr of ticks) {
       const ang = yearAngle(yr);
       const r = rYearLabels;
-      p.text(yr,
-             cx + Math.cos(ang) * r,
-             cy + Math.sin(ang) * r);
+      const lx = cx + Math.cos(ang) * r;
+      const ly = cy + Math.sin(ang) * r;
+
+      p.noStroke();
+      p.fill(16, 24, 44);
+      p.rect(lx - 22, ly - 11, 44, 22, 4);
+
+      p.fill(200, 210, 225);
+      p.textStyle(p.BOLD);
+      p.textSize(13);
+      p.textAlign(p.CENTER, p.CENTER);
+      p.text(yr, lx, ly);
     }
   }
 
-  // ── START (2000) and END (2024) anchor markers ──
   function drawStartEndMarkers() {
     drawAnchor(2000, 'START', sk15_data[0].pa3, 'left');
-    drawAnchor(2024, 'NOW',  sk15_data[sk15_data.length - 1].pa3, 'right');
+    drawAnchor(2024, 'TODAY', sk15_data[sk15_data.length - 1].pa3, 'right');
   }
 
   function drawAnchor(year, label, pa3Val, side) {
     const ang = yearAngle(year);
-    // anchor sits on the OUTER ring where the bar starts
     const ax = cx + Math.cos(ang) * rBarOuter;
     const ay = cy + Math.sin(ang) * rBarOuter;
 
-    // big yellow dot to mark the anchor
     p.noStroke();
     p.fill(240, 175, 60);
     p.ellipse(ax, ay, 14, 14);
     p.fill(16, 24, 44);
     p.ellipse(ax, ay, 6, 6);
 
-    // year label OUTSIDE the dot, very prominent
     const offsetX = side === 'left' ? -14 : 14;
     p.fill(240, 240, 245);
     p.textStyle(p.BOLD);
@@ -238,21 +229,18 @@ registerSketch('sk15', function (p) {
     p.textAlign(side === 'left' ? p.RIGHT : p.LEFT, p.CENTER);
     p.text(year, ax + offsetX, ay - 14);
 
-    // small tag "START" / "NOW"
     p.fill(240, 175, 60);
     p.textSize(10);
     p.text(label, ax + offsetX, ay + 4);
 
-    // the 3PA value right below
     p.fill(220, 60, 60);
     p.textStyle(p.BOLD);
     p.textSize(13);
-    p.text(pa3Val.toFixed(1) + ' 3PA', ax + offsetX, ay + 20);
+    p.text(pa3Val.toFixed(1) + ' threes/game', ax + offsetX, ay + 20);
   }
 
-  // ── timeline baseline beneath the dial (gives a visual anchor) ──
   function drawTimelineBaseline() {
-    const yLine = cy + 8;  // sits just below the half-circle diameter
+    const yLine = cy + 8;
     const xLeft = cx + Math.cos(yearAngle(2000)) * rBarOuter;
     const xRight = cx + Math.cos(yearAngle(2024)) * rBarOuter;
 
@@ -260,17 +248,81 @@ registerSketch('sk15', function (p) {
     p.strokeWeight(1.5);
     p.line(xLeft, yLine, xRight, yLine);
 
-    // small arrow tip on the right end
     p.noStroke();
     p.fill(80, 95, 120);
     p.triangle(xRight, yLine, xRight - 8, yLine - 4, xRight - 8, yLine + 4);
 
-    // baseline label
     p.fill(120, 135, 160);
     p.textStyle(p.BOLD);
     p.textSize(10);
     p.textAlign(p.CENTER, p.TOP);
-    p.text('TIMELINE  2000 → 2024  ·  25 NBA seasons', cx, yLine + 6);
+    p.text('TIME  →  2000 to 2024  ·  25 NBA seasons', cx, yLine + 6);
+  }
+
+  function drawElementLegend() {
+    // ── GOLD LINE callout (top-left) ──
+    const gx = 30, gy = 175;
+    p.noStroke();
+    p.fill(240, 175, 60);
+    p.ellipse(gx, gy, 9, 9);
+
+    p.fill(240, 240, 245);
+    p.textStyle(p.BOLD);
+    p.textSize(12);
+    p.textAlign(p.LEFT, p.CENTER);
+    p.text('OUTER GOLD LINE', gx + 14, gy);
+
+    p.fill(150, 160, 180);
+    p.textStyle(p.NORMAL);
+    p.textSize(11);
+    p.text('Points scored per game', gx + 14, gy + 16);
+    p.text('Higher = more scoring', gx + 14, gy + 30);
+
+    // arrow to gold line + small target circle
+    const goldAng = yearAngle(2006);
+    const goldX = cx + Math.cos(goldAng) * ptsRadius(97.0);
+    const goldY = cy + Math.sin(goldAng) * ptsRadius(97.0);
+    p.stroke(240, 175, 60, 130);
+    p.strokeWeight(1);
+    p.drawingContext.setLineDash([2, 3]);
+    p.line(gx + 100, gy + 22, goldX - 6, goldY + 4);
+    p.drawingContext.setLineDash([]);
+    p.noFill();
+    p.stroke(240, 175, 60);
+    p.strokeWeight(1.5);
+    p.ellipse(goldX, goldY, 12, 12);
+
+    // ── RED BARS callout (top-right) ──
+    const rx = 595, ry = 235;
+    p.noStroke();
+    p.fill(220, 60, 60);
+    p.rect(rx - 2, ry - 6, 4, 12);
+
+    p.fill(240, 240, 245);
+    p.textStyle(p.BOLD);
+    p.textSize(12);
+    p.textAlign(p.LEFT, p.CENTER);
+    p.text('INNER RED BARS', rx + 12, ry);
+
+    p.fill(150, 160, 180);
+    p.textStyle(p.NORMAL);
+    p.textSize(11);
+    p.text('3-pointers attempted per game', rx + 12, ry + 16);
+    p.text('Longer (inward) = more threes', rx + 12, ry + 30);
+
+    // arrow to a specific red bar + small target circle
+    const redAng = yearAngle(2020);
+    const redX = cx + Math.cos(redAng) * rBarOuter;
+    const redY = cy + Math.sin(redAng) * rBarOuter;
+    p.stroke(220, 60, 60, 130);
+    p.strokeWeight(1);
+    p.drawingContext.setLineDash([2, 3]);
+    p.line(rx + 10, ry + 22, redX + 8, redY - 4);
+    p.drawingContext.setLineDash([]);
+    p.noFill();
+    p.stroke(220, 60, 60);
+    p.strokeWeight(1.5);
+    p.ellipse(redX, redY - 10, 14, 14);
   }
 
   function drawPivotPointer() {
@@ -280,54 +332,44 @@ registerSketch('sk15', function (p) {
     const px = cx + Math.cos(ang) * r;
     const py = cy + Math.sin(ang) * r;
 
-    // dot at pivot location
     p.fill(240, 175, 60);
     p.noStroke();
     p.ellipse(px, py, 11, 11);
 
-    // ── annotation box on far-right ──
-    const boxX = 590;
-    const boxY = 100;
-    const boxW = 200;
+    // ── annotation moved to top-center (above the dial, between the two callouts) ──
+    const boxX = 280;
+    const boxY = 115;
+    const boxW = 240;
 
-    p.fill(22, 32, 56, 235);
+    p.fill(22, 32, 56, 240);
     p.noStroke();
-    p.rect(boxX - 8, boxY - 8, boxW, 108, 6);
+    p.rect(boxX - 8, boxY - 8, boxW, 80, 6);
 
     p.fill(240, 175, 60);
-    p.rect(boxX - 8, boxY - 8, 3, 108);
+    p.rect(boxX - 8, boxY - 8, 3, 80);
 
-    // connector line
-    p.stroke(255, 200, 100, 110);
+    // connector — short dashed line from box-bottom down to the pivot dot
+    p.stroke(255, 200, 100, 130);
     p.strokeWeight(1);
     p.drawingContext.setLineDash([3, 4]);
     p.noFill();
-    p.beginShape();
-    p.vertex(boxX - 8, boxY + 90);
-    p.vertex(px + 60, py - 20);
-    p.vertex(px + 6, py - 4);
-    p.endShape();
+    p.line(boxX + boxW / 2 - 8, boxY + 72, px, py - 5);
     p.drawingContext.setLineDash([]);
 
-    // label text — leading with the year
     p.noStroke();
     p.fill(240, 240, 245);
-    p.textSize(22);
+    p.textSize(20);
     p.textStyle(p.BOLD);
     p.textAlign(p.LEFT, p.TOP);
-    p.text('2016', boxX, boxY);
+    p.text('2016 — THE TIPPING POINT', boxX, boxY);
 
     p.fill(220, 60, 60);
-    p.textSize(13);
-    p.text('THE TIPPING POINT', boxX, boxY + 30);
-
-    p.fill(240, 240, 245);
-    p.textStyle(p.NORMAL);
     p.textSize(11);
-    p.text('3PA hit 24.1 per game', boxX, boxY + 50);
+    p.text('24.1 threes/game  ·  102.7 pts', boxX, boxY + 28);
+
     p.fill(150, 160, 180);
-    p.text('(up from 13.7 in 2000)', boxX, boxY + 67);
-    p.text('Warriors went 73-9 this year', boxX, boxY + 84);
+    p.textStyle(p.NORMAL);
+    p.text('Warriors went 73-9 this season', boxX, boxY + 46);
   }
 
   function drawHoverTooltip() {
@@ -350,7 +392,7 @@ registerSketch('sk15', function (p) {
     if (sk15_hoverIdx < 0) return;
 
     const d = sk15_data[sk15_hoverIdx];
-    const boxW = 160, boxH = 100;
+    const boxW = 170, boxH = 100;
     let bx = p.mouseX + 12;
     let by = p.mouseY + 12;
     if (bx + boxW > CANVAS_W - 15) bx = p.mouseX - boxW - 12;
@@ -375,19 +417,19 @@ registerSketch('sk15', function (p) {
     let row = by + 38;
 
     p.textSize(10); p.textStyle(p.NORMAL); p.fill(150, 160, 180);
-    p.textAlign(p.LEFT, p.CENTER); p.text('3PA per game', labelX, row);
+    p.textAlign(p.LEFT, p.CENTER); p.text('Threes attempted', labelX, row);
     p.fill(220, 60, 60); p.textStyle(p.BOLD); p.textSize(12);
     p.textAlign(p.RIGHT, p.CENTER); p.text(d.pa3.toFixed(1), valX, row);
     row += 19;
 
     p.textSize(10); p.textStyle(p.NORMAL); p.fill(150, 160, 180);
-    p.textAlign(p.LEFT, p.CENTER); p.text('PTS per game', labelX, row);
+    p.textAlign(p.LEFT, p.CENTER); p.text('Points scored', labelX, row);
     p.fill(240, 175, 60); p.textStyle(p.BOLD); p.textSize(12);
     p.textAlign(p.RIGHT, p.CENTER); p.text(d.pts.toFixed(1), valX, row);
     row += 19;
 
     p.textSize(10); p.textStyle(p.NORMAL); p.fill(150, 160, 180);
-    p.textAlign(p.LEFT, p.CENTER); p.text('2PA per game', labelX, row);
+    p.textAlign(p.LEFT, p.CENTER); p.text('Twos attempted', labelX, row);
     p.fill(85, 150, 230); p.textStyle(p.BOLD); p.textSize(12);
     p.textAlign(p.RIGHT, p.CENTER); p.text(d.pa2.toFixed(1), valX, row);
   }
@@ -399,16 +441,16 @@ registerSketch('sk15', function (p) {
     p.textStyle(p.BOLD);
     p.textSize(13);
     p.textAlign(p.CENTER, p.CENTER);
-    p.text('25-YEAR SUMMARY', cx, yTop);
+    p.text('THE 25-YEAR SHIFT', cx, yTop);
 
     p.stroke(255, 255, 255, 22);
     p.strokeWeight(1);
     p.line(cx - 130, yTop + 14, cx + 130, yTop + 14);
 
     const cards = [
-      { top: '13.7 → 35.1',  sub: '3PA per game  (+156%)',   color: [220, 60, 60] },
-      { top: '94.3 → 114.2', sub: 'PTS per game  (+21.1%)',  color: [240, 175, 60] },
-      { top: '76.3 → 53.2',  sub: '2PA per game  (−30.3%)',  color: [85, 150, 230] },
+      { top: '13.7 → 35.1',  sub: 'Threes per game  (+156%)',   color: [220, 60, 60] },
+      { top: '94.3 → 114.2', sub: 'Points per game  (+21.1%)',  color: [240, 175, 60] },
+      { top: '76.3 → 53.2',  sub: 'Twos per game  (−30.3%)',    color: [85, 150, 230] },
     ];
 
     const cardW = 220, cardH = 70, gap = 14;
@@ -441,37 +483,39 @@ registerSketch('sk15', function (p) {
   }
 
   function drawCaption() {
-    const y = 700;
-    const w = 700;
+    const y = 698;
+    const w = 720;
     p.noStroke();
     p.fill(22, 32, 56);
-    p.rect(cx - w / 2, y, w, 52, 4);
+    p.rect(cx - w / 2, y, w, 56, 4);
 
     p.fill(240, 175, 60);
-    p.rect(cx - w / 2, y, 3, 52);
+    p.rect(cx - w / 2, y, 3, 56);
 
     p.fill(240, 240, 245);
     p.textStyle(p.BOLD);
-    p.textSize(13);
+    p.textSize(12);
     p.textAlign(p.LEFT, p.TOP);
-    p.text('Start at 2000 on the left  →  follow the arc  →  end at 2024 on the right.',
+    p.text('How to read this chart',
            cx - w / 2 + 14, y + 8);
 
     p.fill(150, 160, 180);
     p.textStyle(p.NORMAL);
     p.textSize(11);
-    p.text('Inner red bars grow inward as 3PA rises. Outer gold line traces total points.',
-           cx - w / 2 + 14, y + 28);
+    p.text('The half-circle is a TIMELINE from 2000 (left) to 2024 (right).',
+           cx - w / 2 + 14, y + 26);
+    p.text('Red bars grow inward as 3-point shooting rises  ·  Gold line rises outward as scoring increases.',
+           cx - w / 2 + 14, y + 40);
   }
 
-  function drawLegend() {
+  function drawBottomHint() {
     const y = 770;
     p.noStroke();
     p.fill(105, 118, 145);
     p.textSize(10);
     p.textStyle(p.NORMAL);
     p.textAlign(p.CENTER, p.CENTER);
-    p.text('Hover any year on the dial for full stats  ·  ● Inner red = 3PA   ·   ● Outer gold = PTS per game',
+    p.text('Hover any year on the dial to see exact stats for that season',
            cx, y);
   }
 
