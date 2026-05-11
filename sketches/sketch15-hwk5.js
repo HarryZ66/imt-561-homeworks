@@ -1,24 +1,28 @@
-// Instance-mode sketch for tab 15 — HWK 5: NBA narrative visualization
+// Instance-mode sketch for tab 15 — HWK 5: Radial stacked area chart
 registerSketch('sk15', function (p) {
   const CANVAS_W = 800;
   const CANVAS_H = 800;
 
   const cx = 400;
-  const cy = 475;
+  const cy = 500;
 
-  const rBarOuter = 220;
-  const rBarInnerMin = 130;
-  const rBarInnerMax = 200;
-  const rYearLabels = 270;   // moved further out so labels don't sit on the gold line
-  const rGold = 305;
+  // Stacked area: inner = 2PA, then 3PA on top. Outer gold line = PTS.
+  // Total shot attempts max scale: we anchor the OUTER boundary of the stacked
+  // area at a constant radius (everyone shoots ~88 attempts/game). Then within
+  // each radial slice, we split: inner band = 2PA, outer band = 3PA.
+  const rInner = 70;          // inner boundary of stacked area (empty core)
+  const rOuter = 260;         // outer boundary of stacked area (anchor)
+  const rGold  = 305;         // gold PTS polyline base
   const rGoldMax = 360;
 
   const angStart = -Math.PI;
   const angEnd   = 0;
   const pivotYear = 2016;
 
-  const pa3Min = 13, pa3Max = 36;
   const ptsMin = 92, ptsMax = 116;
+  // Total attempts per game in this dataset ranges ~85–93. We anchor the outer
+  // ring at the dataset max so 3PA growth is shown as "eating into" 2PA share.
+  const totalMin = 84, totalMax = 92;
 
   let sk15_data;
   let sk15_hoverIdx = -1;
@@ -26,9 +30,6 @@ registerSketch('sk15', function (p) {
   function yearAngle(yr) {
     const t = (yr - 2000) / (2024 - 2000);
     return angStart + (angEnd - angStart) * t;
-  }
-  function pa3InnerRadius(v) {
-    return p.map(v, pa3Min, pa3Max, rBarInnerMax, rBarInnerMin);
   }
   function ptsRadius(v) {
     return p.map(v, ptsMin, ptsMax, rGold, rGoldMax);
@@ -70,84 +71,108 @@ registerSketch('sk15', function (p) {
   p.draw = function () {
     p.background(16, 24, 44);
     drawHeader();
-    drawDial();
-    drawTimelineBaseline();
-    drawStartEndMarkers();
-    drawElementLegend();
-    drawPivotPointer();
+    drawStackedArea();   // ← the new hero chart
+    drawPtsLine();
+    drawYearLabels();
+    drawEndpointMarkers();
+    drawPivotAnnotation();
     drawHoverTooltip();
+    drawColorLegend();
     drawSummaryCards();
-    drawCaption();
-    drawBottomHint();
   };
 
   function drawHeader() {
     p.noStroke();
     p.fill(240, 240, 245);
-    p.textSize(22);
+    p.textSize(26);
     p.textStyle(p.BOLD);
     p.textAlign(p.CENTER, p.CENTER);
-    p.text('NBA Shooting Has Changed', cx, 32);
+    p.text('NBA Shooting Has Changed', cx, 38);
 
     p.fill(240, 175, 60);
-    p.textSize(18);
-    p.text('3-Pointers Are Up 156% Since 2000', cx, 60);
+    p.textSize(17);
+    p.text('3-Pointers Eating Into 2-Pointers Since 2000', cx, 66);
 
     p.fill(150, 160, 180);
     p.textSize(12);
     p.textStyle(p.NORMAL);
-    p.text('A 25-year look at how the league traded mid-range shots for threes — and scored more doing it.',
-           cx, 84);
+    p.text('Each radial slice = one season  ·  Red expanding outward = 3PA taking share from 2PA',
+           cx, 90);
   }
 
-  function drawDial() {
+  // ─── The hero: radial stacked area ───
+  // For each season, we draw two "wedges" between two consecutive angles.
+  // Inner wedge (rInner → rSplit) = 2PA share
+  // Outer wedge (rSplit → rOuter) = 3PA share
+  function drawStackedArea() {
+    const n = sk15_data.length;
+
+    // 1) build polygons by going forward along outer ring, then backward along
+    //    the split ring (for 3PA layer), and forward along split, backward
+    //    along inner (for 2PA layer)
+    const angles = sk15_data.map(d => yearAngle(d.year));
+    const splits = sk15_data.map(d => {
+      const total = d.pa2 + d.pa3;
+      // share of 2PA out of total attempts decides the split radius
+      const share2 = d.pa2 / total;
+      // 2PA occupies the INNER band from rInner outward.
+      // So splitRadius = rInner + share2 * (rOuter - rInner)
+      return rInner + share2 * (rOuter - rInner);
+    });
+
+    // ── 2PA inner layer (blue) ──
+    p.noStroke();
+    p.fill(60, 120, 200, 220);
+    p.beginShape();
+    // outer edge of 2PA layer (= split radii), forward
+    for (let i = 0; i < n; i++) {
+      p.vertex(cx + Math.cos(angles[i]) * splits[i],
+               cy + Math.sin(angles[i]) * splits[i]);
+    }
+    // back along inner ring (constant rInner)
+    for (let i = n - 1; i >= 0; i--) {
+      p.vertex(cx + Math.cos(angles[i]) * rInner,
+               cy + Math.sin(angles[i]) * rInner);
+    }
+    p.endShape(p.CLOSE);
+
+    // ── 3PA outer layer (red) ──
+    p.fill(210, 55, 55, 235);
+    p.beginShape();
+    // outer constant ring, forward
+    for (let i = 0; i < n; i++) {
+      p.vertex(cx + Math.cos(angles[i]) * rOuter,
+               cy + Math.sin(angles[i]) * rOuter);
+    }
+    // back along the split (= 3PA inner boundary)
+    for (let i = n - 1; i >= 0; i--) {
+      p.vertex(cx + Math.cos(angles[i]) * splits[i],
+               cy + Math.sin(angles[i]) * splits[i]);
+    }
+    p.endShape(p.CLOSE);
+
+    // ── split line (where 2PA ends and 3PA begins) — thin yellow stroke ──
     p.noFill();
-    p.stroke(255, 255, 255, 10);
-    p.strokeWeight(1);
-    for (let r = rBarInnerMin; r <= rBarOuter; r += 25) {
-      p.arc(cx, cy, r * 2, r * 2, angStart, angEnd);
+    p.stroke(255, 220, 150, 180);
+    p.strokeWeight(1.5);
+    p.beginShape();
+    for (let i = 0; i < n; i++) {
+      p.vertex(cx + Math.cos(angles[i]) * splits[i],
+               cy + Math.sin(angles[i]) * splits[i]);
     }
+    p.endShape();
 
-    drawPtsLine();
-    drawPaBars();
-    drawYearLabels();
-  }
-
-  function drawPaBars() {
-    for (let i = 0; i < sk15_data.length; i++) {
-      const d = sk15_data[i];
-      const ang = yearAngle(d.year);
-      const rOuter = rBarOuter;
-      const rInner = pa3InnerRadius(d.pa3);
-      const isHover = i === sk15_hoverIdx;
-      const isPivot = d.year === pivotYear;
-
-      const t = (d.pa3 - pa3Min) / (pa3Max - pa3Min);
-      const baseR = p.lerp(170, 235, t);
-      const baseG = p.lerp(50, 70, t);
-      const baseB = p.lerp(50, 75, t);
-      p.stroke(baseR, baseG, baseB, isHover ? 255 : 220);
-      p.strokeWeight(isHover ? 9 : 6.5);
-      p.strokeCap(p.ROUND);
-
-      const x1 = cx + Math.cos(ang) * rOuter;
-      const y1 = cy + Math.sin(ang) * rOuter;
-      const x2 = cx + Math.cos(ang) * rInner;
-      const y2 = cy + Math.sin(ang) * rInner;
-      p.line(x1, y1, x2, y2);
-
-      if (isPivot) {
-        p.stroke(255, 200, 100);
-        p.strokeWeight(2);
-        p.drawingContext.setLineDash([4, 4]);
-        const xExt = cx + Math.cos(ang) * (rInner - 40);
-        const yExt = cy + Math.sin(ang) * (rInner - 40);
-        p.line(x2, y2, xExt, yExt);
-        p.drawingContext.setLineDash([]);
-      }
+    // ── hover highlight: thin vertical line at the hovered year ──
+    if (sk15_hoverIdx >= 0) {
+      const ang = angles[sk15_hoverIdx];
+      p.stroke(255, 255, 255, 200);
+      p.strokeWeight(2);
+      p.line(cx + Math.cos(ang) * rInner, cy + Math.sin(ang) * rInner,
+             cx + Math.cos(ang) * rOuter, cy + Math.sin(ang) * rOuter);
     }
   }
 
+  // ─── Gold PTS line on outside of the stacked area ───
   function drawPtsLine() {
     p.noFill();
     p.stroke(240, 175, 60);
@@ -161,215 +186,145 @@ registerSketch('sk15', function (p) {
       p.vertex(cx + Math.cos(ang) * r, cy + Math.sin(ang) * r);
     }
     p.endShape();
-
-    const highlight = new Set([2012, 2016]);
-    for (const d of sk15_data) {
-      if (!highlight.has(d.year)) continue;
-      const ang = yearAngle(d.year);
-      const r = ptsRadius(d.pts);
-      const px = cx + Math.cos(ang) * r;
-      const py = cy + Math.sin(ang) * r;
-      p.noStroke();
-      p.fill(240, 175, 60);
-      p.ellipse(px, py, 8, 8);
-
-      p.fill(240, 240, 245);
-      p.textSize(11);
-      p.textStyle(p.BOLD);
-      p.textAlign(p.CENTER, p.BOTTOM);
-      if (d.year === 2012)      p.text('96.3 pts', px, py - 10);
-      else if (d.year === 2016) {
-        p.fill(240, 175, 60);
-        p.text('102.7 pts', px, py - 10);
-      }
-    }
   }
 
   function drawYearLabels() {
-    // small dark plate behind each label so it never appears to be crossed by the gold line
+    p.noStroke();
+    p.fill(200, 210, 225);
+    p.textStyle(p.BOLD);
+    p.textSize(13);
+    p.textAlign(p.CENTER, p.CENTER);
     const ticks = [2008, 2012, 2016, 2020];
     for (const yr of ticks) {
       const ang = yearAngle(yr);
-      const r = rYearLabels;
+      const r = 282;  // between stacked area outer edge and gold line
       const lx = cx + Math.cos(ang) * r;
       const ly = cy + Math.sin(ang) * r;
 
+      // dark plate behind label so it doesn't get crossed by the gold line
       p.noStroke();
       p.fill(16, 24, 44);
-      p.rect(lx - 22, ly - 11, 44, 22, 4);
+      p.rect(lx - 22, ly - 10, 44, 20, 4);
 
       p.fill(200, 210, 225);
-      p.textStyle(p.BOLD);
-      p.textSize(13);
-      p.textAlign(p.CENTER, p.CENTER);
       p.text(yr, lx, ly);
     }
   }
 
-  function drawStartEndMarkers() {
-    drawAnchor(2000, 'START', sk15_data[0].pa3, 'left');
-    drawAnchor(2024, 'TODAY', sk15_data[sk15_data.length - 1].pa3, 'right');
+  function drawEndpointMarkers() {
+    drawEndpoint('left',  sk15_data[0],                    '2000', 'START');
+    drawEndpoint('right', sk15_data[sk15_data.length - 1], '2024', 'TODAY');
   }
 
-  function drawAnchor(year, label, pa3Val, side) {
-    const ang = yearAngle(year);
-    const ax = cx + Math.cos(ang) * rBarOuter;
-    const ay = cy + Math.sin(ang) * rBarOuter;
+  function drawEndpoint(side, d, yearTxt, tagTxt) {
+    const ang = side === 'left' ? angStart : angEnd;
+    const ax = cx + Math.cos(ang) * rOuter;
+    const ay = cy + Math.sin(ang) * rOuter;
 
     p.noStroke();
     p.fill(240, 175, 60);
-    p.ellipse(ax, ay, 14, 14);
+    p.ellipse(ax, ay, 12, 12);
     p.fill(16, 24, 44);
-    p.ellipse(ax, ay, 6, 6);
+    p.ellipse(ax, ay, 5, 5);
 
-    const offsetX = side === 'left' ? -14 : 14;
+    const align = side === 'left' ? p.RIGHT : p.LEFT;
+    const dirSign = side === 'left' ? -1 : 1;
+    const labelX = ax + dirSign * 16;
+
     p.fill(240, 240, 245);
     p.textStyle(p.BOLD);
     p.textSize(22);
-    p.textAlign(side === 'left' ? p.RIGHT : p.LEFT, p.CENTER);
-    p.text(year, ax + offsetX, ay - 14);
+    p.textAlign(align, p.CENTER);
+    p.text(yearTxt, labelX, ay - 18);
 
     p.fill(240, 175, 60);
     p.textSize(10);
-    p.text(label, ax + offsetX, ay + 4);
+    p.text(tagTxt, labelX, ay - 2);
 
-    p.fill(220, 60, 60);
-    p.textStyle(p.BOLD);
-    p.textSize(13);
-    p.text(pa3Val.toFixed(1) + ' threes/game', ax + offsetX, ay + 20);
+    // three colored value rows
+    const valueRows = [
+      { color: [220, 60, 60],  label: 'Threes', value: d.pa3.toFixed(1) },
+      { color: [85, 150, 230], label: 'Twos',   value: d.pa2.toFixed(1) },
+      { color: [240, 175, 60], label: 'Points', value: d.pts.toFixed(1) },
+    ];
+
+    let ry = ay + 20;
+    for (const row of valueRows) {
+      // dot
+      p.noStroke();
+      p.fill(row.color[0], row.color[1], row.color[2]);
+      const dotX = side === 'left' ? labelX - 86 : labelX;
+      p.ellipse(dotX, ry, 7, 7);
+
+      // label
+      p.fill(150, 160, 180);
+      p.textStyle(p.NORMAL);
+      p.textSize(10);
+      p.textAlign(p.LEFT, p.CENTER);
+      p.text(row.label, dotX + 8, ry);
+
+      // value
+      p.fill(row.color[0], row.color[1], row.color[2]);
+      p.textStyle(p.BOLD);
+      p.textSize(13);
+      p.textAlign(p.RIGHT, p.CENTER);
+      const valX = side === 'left' ? labelX : labelX + 86;
+      p.text(row.value, valX, ry);
+
+      ry += 17;
+    }
   }
 
-  function drawTimelineBaseline() {
-    const yLine = cy + 8;
-    const xLeft = cx + Math.cos(yearAngle(2000)) * rBarOuter;
-    const xRight = cx + Math.cos(yearAngle(2024)) * rBarOuter;
-
-    p.stroke(80, 95, 120);
-    p.strokeWeight(1.5);
-    p.line(xLeft, yLine, xRight, yLine);
-
-    p.noStroke();
-    p.fill(80, 95, 120);
-    p.triangle(xRight, yLine, xRight - 8, yLine - 4, xRight - 8, yLine + 4);
-
-    p.fill(120, 135, 160);
-    p.textStyle(p.BOLD);
-    p.textSize(10);
-    p.textAlign(p.CENTER, p.TOP);
-    p.text('TIME  →  2000 to 2024  ·  25 NBA seasons', cx, yLine + 6);
-  }
-
-  function drawElementLegend() {
-    // ── GOLD LINE callout (top-left) ──
-    const gx = 30, gy = 175;
-    p.noStroke();
-    p.fill(240, 175, 60);
-    p.ellipse(gx, gy, 9, 9);
-
-    p.fill(240, 240, 245);
-    p.textStyle(p.BOLD);
-    p.textSize(12);
-    p.textAlign(p.LEFT, p.CENTER);
-    p.text('OUTER GOLD LINE', gx + 14, gy);
-
-    p.fill(150, 160, 180);
-    p.textStyle(p.NORMAL);
-    p.textSize(11);
-    p.text('Points scored per game', gx + 14, gy + 16);
-    p.text('Higher = more scoring', gx + 14, gy + 30);
-
-    // arrow to gold line + small target circle
-    const goldAng = yearAngle(2006);
-    const goldX = cx + Math.cos(goldAng) * ptsRadius(97.0);
-    const goldY = cy + Math.sin(goldAng) * ptsRadius(97.0);
-    p.stroke(240, 175, 60, 130);
-    p.strokeWeight(1);
-    p.drawingContext.setLineDash([2, 3]);
-    p.line(gx + 100, gy + 22, goldX - 6, goldY + 4);
-    p.drawingContext.setLineDash([]);
-    p.noFill();
-    p.stroke(240, 175, 60);
-    p.strokeWeight(1.5);
-    p.ellipse(goldX, goldY, 12, 12);
-
-    // ── RED BARS callout (top-right) ──
-    const rx = 595, ry = 235;
-    p.noStroke();
-    p.fill(220, 60, 60);
-    p.rect(rx - 2, ry - 6, 4, 12);
-
-    p.fill(240, 240, 245);
-    p.textStyle(p.BOLD);
-    p.textSize(12);
-    p.textAlign(p.LEFT, p.CENTER);
-    p.text('INNER RED BARS', rx + 12, ry);
-
-    p.fill(150, 160, 180);
-    p.textStyle(p.NORMAL);
-    p.textSize(11);
-    p.text('3-pointers attempted per game', rx + 12, ry + 16);
-    p.text('Longer (inward) = more threes', rx + 12, ry + 30);
-
-    // arrow to a specific red bar + small target circle
-    const redAng = yearAngle(2020);
-    const redX = cx + Math.cos(redAng) * rBarOuter;
-    const redY = cy + Math.sin(redAng) * rBarOuter;
-    p.stroke(220, 60, 60, 130);
-    p.strokeWeight(1);
-    p.drawingContext.setLineDash([2, 3]);
-    p.line(rx + 10, ry + 22, redX + 8, redY - 4);
-    p.drawingContext.setLineDash([]);
-    p.noFill();
-    p.stroke(220, 60, 60);
-    p.strokeWeight(1.5);
-    p.ellipse(redX, redY - 10, 14, 14);
-  }
-
-  function drawPivotPointer() {
+  function drawPivotAnnotation() {
     const d = sk15_data.find(x => x.year === pivotYear);
     const ang = yearAngle(pivotYear);
-    const r = pa3InnerRadius(d.pa3);
-    const px = cx + Math.cos(ang) * r;
-    const py = cy + Math.sin(ang) * r;
+    const total = d.pa2 + d.pa3;
+    const share2 = d.pa2 / total;
+    const splitR = rInner + share2 * (rOuter - rInner);
+    const px = cx + Math.cos(ang) * splitR;
+    const py = cy + Math.sin(ang) * splitR;
 
-    p.fill(240, 175, 60);
+    // bright marker on the split line at 2016
+    p.fill(255, 220, 150);
     p.noStroke();
-    p.ellipse(px, py, 11, 11);
+    p.ellipse(px, py, 10, 10);
+    p.fill(16, 24, 44);
+    p.ellipse(px, py, 4, 4);
 
-    // ── annotation moved to top-center (above the dial, between the two callouts) ──
-    const boxX = 280;
-    const boxY = 115;
-    const boxW = 240;
+    // annotation in the empty top-center area
+    const boxX = cx - 130;
+    const boxY = 130;
+    const boxW = 260;
+    const boxH = 70;
 
     p.fill(22, 32, 56, 240);
     p.noStroke();
-    p.rect(boxX - 8, boxY - 8, boxW, 80, 6);
-
+    p.rect(boxX, boxY, boxW, boxH, 6);
     p.fill(240, 175, 60);
-    p.rect(boxX - 8, boxY - 8, 3, 80);
+    p.rect(boxX, boxY, 3, boxH);
 
-    // connector — short dashed line from box-bottom down to the pivot dot
-    p.stroke(255, 200, 100, 130);
+    // tiny dashed connector down to pivot
+    p.stroke(255, 220, 150, 130);
     p.strokeWeight(1);
     p.drawingContext.setLineDash([3, 4]);
     p.noFill();
-    p.line(boxX + boxW / 2 - 8, boxY + 72, px, py - 5);
+    p.line(boxX + boxW / 2, boxY + boxH, px, py - 8);
     p.drawingContext.setLineDash([]);
 
     p.noStroke();
     p.fill(240, 240, 245);
-    p.textSize(20);
+    p.textSize(15);
     p.textStyle(p.BOLD);
     p.textAlign(p.LEFT, p.TOP);
-    p.text('2016 — THE TIPPING POINT', boxX, boxY);
+    p.text('2016 — The Tipping Point', boxX + 12, boxY + 8);
 
     p.fill(220, 60, 60);
     p.textSize(11);
-    p.text('24.1 threes/game  ·  102.7 pts', boxX, boxY + 28);
+    p.text('3PA share crossed 1/4 of total attempts', boxX + 12, boxY + 30);
 
     p.fill(150, 160, 180);
     p.textStyle(p.NORMAL);
-    p.text('Warriors went 73-9 this season', boxX, boxY + 46);
+    p.text('Warriors went 73-9 that season', boxX + 12, boxY + 48);
   }
 
   function drawHoverTooltip() {
@@ -378,7 +333,7 @@ registerSketch('sk15', function (p) {
     const dy = p.mouseY - cy;
     const dist = Math.sqrt(dx * dx + dy * dy);
 
-    if (dy < 8 && dist > rBarInnerMin - 20 && dist < rBarOuter + 20) {
+    if (dy < 8 && dist > rInner - 10 && dist < rOuter + 30) {
       const a = Math.atan2(dy, dx);
       let best = -1, bestDiff = 1e9;
       for (let i = 0; i < sk15_data.length; i++) {
@@ -392,7 +347,10 @@ registerSketch('sk15', function (p) {
     if (sk15_hoverIdx < 0) return;
 
     const d = sk15_data[sk15_hoverIdx];
-    const boxW = 170, boxH = 100;
+    const total = d.pa2 + d.pa3;
+    const pct3 = (d.pa3 / total * 100).toFixed(1);
+
+    const boxW = 180, boxH = 115;
     let bx = p.mouseX + 12;
     let by = p.mouseY + 12;
     if (bx + boxW > CANVAS_W - 15) bx = p.mouseX - boxW - 12;
@@ -414,28 +372,67 @@ registerSketch('sk15', function (p) {
     p.text(d.year + ' season', bx + 10, by + 8);
 
     const labelX = bx + 10, valX = bx + boxW - 10;
-    let row = by + 38;
+    let row = by + 36;
 
     p.textSize(10); p.textStyle(p.NORMAL); p.fill(150, 160, 180);
-    p.textAlign(p.LEFT, p.CENTER); p.text('Threes attempted', labelX, row);
+    p.textAlign(p.LEFT, p.CENTER); p.text('3-point attempts', labelX, row);
     p.fill(220, 60, 60); p.textStyle(p.BOLD); p.textSize(12);
     p.textAlign(p.RIGHT, p.CENTER); p.text(d.pa3.toFixed(1), valX, row);
-    row += 19;
+    row += 18;
+
+    p.textSize(10); p.textStyle(p.NORMAL); p.fill(150, 160, 180);
+    p.textAlign(p.LEFT, p.CENTER); p.text('2-point attempts', labelX, row);
+    p.fill(85, 150, 230); p.textStyle(p.BOLD); p.textSize(12);
+    p.textAlign(p.RIGHT, p.CENTER); p.text(d.pa2.toFixed(1), valX, row);
+    row += 18;
 
     p.textSize(10); p.textStyle(p.NORMAL); p.fill(150, 160, 180);
     p.textAlign(p.LEFT, p.CENTER); p.text('Points scored', labelX, row);
     p.fill(240, 175, 60); p.textStyle(p.BOLD); p.textSize(12);
     p.textAlign(p.RIGHT, p.CENTER); p.text(d.pts.toFixed(1), valX, row);
-    row += 19;
+    row += 22;
 
-    p.textSize(10); p.textStyle(p.NORMAL); p.fill(150, 160, 180);
-    p.textAlign(p.LEFT, p.CENTER); p.text('Twos attempted', labelX, row);
-    p.fill(85, 150, 230); p.textStyle(p.BOLD); p.textSize(12);
-    p.textAlign(p.RIGHT, p.CENTER); p.text(d.pa2.toFixed(1), valX, row);
+    p.fill(105, 118, 145);
+    p.textSize(10);
+    p.textStyle(p.NORMAL);
+    p.textAlign(p.LEFT, p.CENTER);
+    p.text('3PA = ' + pct3 + '% of all shots', labelX, row);
+  }
+
+  function drawColorLegend() {
+    const y = 620;
+    p.textStyle(p.NORMAL);
+    p.textSize(12);
+    p.textAlign(p.LEFT, p.CENTER);
+
+    const items = [
+      { color: [220, 60, 60],  label: 'Red area = 3-point attempts' },
+      { color: [85, 150, 230], label: 'Blue area = 2-point attempts' },
+      { color: [240, 175, 60], label: 'Gold line = Points scored' },
+    ];
+    const gap = 22;
+    const dotR = 9;
+    const widths = items.map(it => p.textWidth(it.label));
+    const totalW = widths.reduce((a, b) => a + b, 0) + gap * (items.length - 1) + items.length * (dotR + 6);
+    let x = cx - totalW / 2;
+
+    items.forEach((it, i) => {
+      p.noStroke();
+      p.fill(it.color[0], it.color[1], it.color[2]);
+      p.rect(x, y - 5, dotR, 10, 2);
+      p.fill(180, 190, 210);
+      p.text(it.label, x + dotR + 6, y);
+      x += dotR + 6 + widths[i] + gap;
+    });
+
+    p.fill(105, 118, 145);
+    p.textSize(10);
+    p.textAlign(p.CENTER, p.CENTER);
+    p.text('Hover any year on the dial for full stats', cx, y + 22);
   }
 
   function drawSummaryCards() {
-    const yTop = 585;
+    const yTop = 670;
     p.noStroke();
     p.fill(240, 175, 60);
     p.textStyle(p.BOLD);
@@ -449,8 +446,8 @@ registerSketch('sk15', function (p) {
 
     const cards = [
       { top: '13.7 → 35.1',  sub: 'Threes per game  (+156%)',   color: [220, 60, 60] },
-      { top: '94.3 → 114.2', sub: 'Points per game  (+21.1%)',  color: [240, 175, 60] },
       { top: '76.3 → 53.2',  sub: 'Twos per game  (−30.3%)',    color: [85, 150, 230] },
+      { top: '94.3 → 114.2', sub: 'Points per game  (+21.1%)',  color: [240, 175, 60] },
     ];
 
     const cardW = 220, cardH = 70, gap = 14;
@@ -480,43 +477,6 @@ registerSketch('sk15', function (p) {
       p.textSize(11);
       p.text(c.sub, x + cardW / 2, cardY + 54);
     }
-  }
-
-  function drawCaption() {
-    const y = 698;
-    const w = 720;
-    p.noStroke();
-    p.fill(22, 32, 56);
-    p.rect(cx - w / 2, y, w, 56, 4);
-
-    p.fill(240, 175, 60);
-    p.rect(cx - w / 2, y, 3, 56);
-
-    p.fill(240, 240, 245);
-    p.textStyle(p.BOLD);
-    p.textSize(12);
-    p.textAlign(p.LEFT, p.TOP);
-    p.text('How to read this chart',
-           cx - w / 2 + 14, y + 8);
-
-    p.fill(150, 160, 180);
-    p.textStyle(p.NORMAL);
-    p.textSize(11);
-    p.text('The half-circle is a TIMELINE from 2000 (left) to 2024 (right).',
-           cx - w / 2 + 14, y + 26);
-    p.text('Red bars grow inward as 3-point shooting rises  ·  Gold line rises outward as scoring increases.',
-           cx - w / 2 + 14, y + 40);
-  }
-
-  function drawBottomHint() {
-    const y = 770;
-    p.noStroke();
-    p.fill(105, 118, 145);
-    p.textSize(10);
-    p.textStyle(p.NORMAL);
-    p.textAlign(p.CENTER, p.CENTER);
-    p.text('Hover any year on the dial to see exact stats for that season',
-           cx, y);
   }
 
   p.windowResized = function () { p.resizeCanvas(CANVAS_W, CANVAS_H); };
