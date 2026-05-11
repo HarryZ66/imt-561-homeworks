@@ -1,16 +1,16 @@
-// Instance-mode sketch for tab 15 — HWK 5: Radial stacked area (red core, blue rim)
+// Instance-mode sketch for tab 15 — HWK 5: Red-dominated radial share chart
 registerSketch('sk15', function (p) {
   const CANVAS_W = 800;
   const CANVAS_H = 800;
 
   const cx = 400;
-  const cy = 500;
+  const cy = 460;
 
-  // Stacked area: RED (3PA) is inner, BLUE (2PA) is outer. Red expanding outward = 3PA share growing.
-  const rInner = 70;
-  const rOuter = 260;
-  const rGold  = 305;
-  const rGoldMax = 360;
+  // Compact dial — red dominates, blue is just an outline
+  const rInner = 50;
+  const rOuter = 250;
+  const rGold  = 295;
+  const rGoldMax = 355;
 
   const angStart = -Math.PI;
   const angEnd   = 0;
@@ -67,7 +67,7 @@ registerSketch('sk15', function (p) {
     drawHeader();
     drawStackedArea();
     drawPtsLine();
-    drawPtsKeyPoints();   // ← key year score callouts on the gold line
+    drawPtsKeyPoints();
     drawYearLabels();
     drawEndpointMarkers();
     drawPivotAnnotation();
@@ -84,14 +84,14 @@ registerSketch('sk15', function (p) {
     p.textAlign(p.CENTER, p.CENTER);
     p.text('NBA Shooting Has Changed', cx, 38);
 
-    p.fill(240, 175, 60);
+    p.fill(235, 60, 50);
     p.textSize(17);
-    p.text('3-Pointers Are Pushing Out 2-Pointers Since 2000', cx, 66);
+    p.text('3-Point Share Grew From 15% to 40% Since 2000', cx, 66);
 
     p.fill(150, 160, 180);
     p.textSize(12);
     p.textStyle(p.NORMAL);
-    p.text('Red radiates outward = 3PA growing  ·  Blue shrinks = 2PA losing share',
+    p.text('Red expanding outward = 3-pointers eating into the league',
            cx, 90);
   }
 
@@ -99,44 +99,16 @@ registerSketch('sk15', function (p) {
     const n = sk15_data.length;
     const angles = sk15_data.map(d => yearAngle(d.year));
 
-    // splits[i] = boundary radius between red(inner) and blue(outer) for season i
     const splits = sk15_data.map(d => {
       const total = d.pa2 + d.pa3;
       const share3 = d.pa3 / total;
-      // RED occupies the inner band from rInner outward by share3 of the full range.
       return rInner + share3 * (rOuter - rInner);
     });
 
-    // ── RED inner layer (3PA) — anchored at rInner, growing outward ──
-    // Use a brighter, hotter red and add a glow band on the outer edge.
+    // ── BLUE: now just a thin outline along the outer ring (not a filled area) ──
+    // First, draw a very faint blue fill for the 2PA remainder so users still see context.
     p.noStroke();
-    p.fill(225, 50, 50, 240);
-    p.beginShape();
-    for (let i = 0; i < n; i++) {
-      p.vertex(cx + Math.cos(angles[i]) * splits[i],
-               cy + Math.sin(angles[i]) * splits[i]);
-    }
-    for (let i = n - 1; i >= 0; i--) {
-      p.vertex(cx + Math.cos(angles[i]) * rInner,
-               cy + Math.sin(angles[i]) * rInner);
-    }
-    p.endShape(p.CLOSE);
-
-    // bright glow line right at the red/blue boundary — looks like fire edge
-    p.noFill();
-    p.stroke(255, 180, 100, 200);
-    p.strokeWeight(2.5);
-    p.strokeCap(p.ROUND);
-    p.beginShape();
-    for (let i = 0; i < n; i++) {
-      p.vertex(cx + Math.cos(angles[i]) * splits[i],
-               cy + Math.sin(angles[i]) * splits[i]);
-    }
-    p.endShape();
-
-    // ── BLUE outer layer (2PA) — between split and rOuter ──
-    p.noStroke();
-    p.fill(60, 120, 200, 210);
+    p.fill(45, 80, 140, 70);   // VERY muted blue
     p.beginShape();
     for (let i = 0; i < n; i++) {
       p.vertex(cx + Math.cos(angles[i]) * rOuter,
@@ -148,7 +120,90 @@ registerSketch('sk15', function (p) {
     }
     p.endShape(p.CLOSE);
 
-    // ── hover marker ──
+    // outer rim line — thin blue
+    p.noFill();
+    p.stroke(85, 150, 230, 180);
+    p.strokeWeight(2);
+    p.beginShape();
+    for (let i = 0; i < n; i++) {
+      p.vertex(cx + Math.cos(angles[i]) * rOuter,
+               cy + Math.sin(angles[i]) * rOuter);
+    }
+    p.endShape();
+
+    // ── RED: bold, saturated, dominant ──
+    // outer glow halo (drawn FIRST so it sits behind the main fill)
+    p.noStroke();
+    p.fill(255, 80, 60, 70);
+    p.beginShape();
+    for (let i = 0; i < n; i++) {
+      p.vertex(cx + Math.cos(angles[i]) * (splits[i] + 14),
+               cy + Math.sin(angles[i]) * (splits[i] + 14));
+    }
+    for (let i = n - 1; i >= 0; i--) {
+      p.vertex(cx + Math.cos(angles[i]) * rInner,
+               cy + Math.sin(angles[i]) * rInner);
+    }
+    p.endShape(p.CLOSE);
+
+    // main red fill
+    p.fill(235, 60, 50, 255);
+    p.beginShape();
+    for (let i = 0; i < n; i++) {
+      p.vertex(cx + Math.cos(angles[i]) * splits[i],
+               cy + Math.sin(angles[i]) * splits[i]);
+    }
+    for (let i = n - 1; i >= 0; i--) {
+      p.vertex(cx + Math.cos(angles[i]) * rInner,
+               cy + Math.sin(angles[i]) * rInner);
+    }
+    p.endShape(p.CLOSE);
+
+    // glowing fire edge at the red/blue boundary
+    p.noFill();
+    p.stroke(255, 220, 130, 240);
+    p.strokeWeight(5);
+    p.strokeCap(p.ROUND);
+    p.beginShape();
+    for (let i = 0; i < n; i++) {
+      p.vertex(cx + Math.cos(angles[i]) * splits[i],
+               cy + Math.sin(angles[i]) * splits[i]);
+    }
+    p.endShape();
+
+    p.stroke(255, 255, 200, 200);
+    p.strokeWeight(1.5);
+    p.beginShape();
+    for (let i = 0; i < n; i++) {
+      p.vertex(cx + Math.cos(angles[i]) * splits[i],
+               cy + Math.sin(angles[i]) * splits[i]);
+    }
+    p.endShape();
+
+    // % share labels inside the red area at key years
+    const sharePcts = [
+      { year: 2000, label: '15%' },
+      { year: 2012, label: '20%' },
+      { year: 2024, label: '40%' },
+    ];
+    for (const sp of sharePcts) {
+      const d = sk15_data.find(x => x.year === sp.year);
+      const ang = yearAngle(sp.year);
+      const share3 = d.pa3 / (d.pa2 + d.pa3);
+      const splitR = rInner + share3 * (rOuter - rInner);
+      const midR = (rInner + splitR) / 2;
+      const lx = cx + Math.cos(ang) * midR;
+      const ly = cy + Math.sin(ang) * midR;
+
+      p.noStroke();
+      p.fill(255, 255, 255);
+      p.textSize(14);
+      p.textStyle(p.BOLD);
+      p.textAlign(p.CENTER, p.CENTER);
+      p.text(sp.label, lx, ly);
+    }
+
+    // hover marker
     if (sk15_hoverIdx >= 0) {
       const ang = angles[sk15_hoverIdx];
       p.stroke(255, 255, 255, 220);
@@ -173,7 +228,6 @@ registerSketch('sk15', function (p) {
     p.endShape();
   }
 
-  // ─── Key year scoring callouts on the gold line ───
   function drawPtsKeyPoints() {
     const keys = [
       { year: 2000, label: '94.3' },
@@ -188,14 +242,12 @@ registerSketch('sk15', function (p) {
       const px = cx + Math.cos(ang) * r;
       const py = cy + Math.sin(ang) * r;
 
-      // dot on the gold line
       p.noStroke();
       p.fill(240, 175, 60);
       p.ellipse(px, py, 10, 10);
       p.fill(16, 24, 44);
       p.ellipse(px, py, 4, 4);
 
-      // score label — outside the line, with a small dark background pill
       const labelR = r + 22;
       const lx = cx + Math.cos(ang) * labelR;
       const ly = cy + Math.sin(ang) * labelR;
@@ -221,7 +273,7 @@ registerSketch('sk15', function (p) {
     const ticks = [2008, 2012, 2016, 2020];
     for (const yr of ticks) {
       const ang = yearAngle(yr);
-      const r = 278;  // between rOuter (260) and gold line (305+)
+      const r = 272;
       const lx = cx + Math.cos(ang) * r;
       const ly = cy + Math.sin(ang) * r;
 
@@ -297,6 +349,7 @@ registerSketch('sk15', function (p) {
     }
   }
 
+  // ── 2016 annotation moved to BOTTOM-LEFT corner, clear of all visuals ──
   function drawPivotAnnotation() {
     const d = sk15_data.find(x => x.year === pivotYear);
     const ang = yearAngle(pivotYear);
@@ -306,17 +359,17 @@ registerSketch('sk15', function (p) {
     const px = cx + Math.cos(ang) * splitR;
     const py = cy + Math.sin(ang) * splitR;
 
-    // bright marker
+    // marker on the split
     p.fill(255, 220, 150);
     p.noStroke();
     p.ellipse(px, py, 12, 12);
     p.fill(16, 24, 44);
     p.ellipse(px, py, 4, 4);
 
-    // annotation top-center
-    const boxX = cx - 135;
+    // annotation in top-right corner — outside the dial entirely
+    const boxX = CANVAS_W - 280;
     const boxY = 130;
-    const boxW = 270;
+    const boxW = 250;
     const boxH = 70;
 
     p.fill(22, 32, 56, 240);
@@ -325,11 +378,12 @@ registerSketch('sk15', function (p) {
     p.fill(240, 175, 60);
     p.rect(boxX, boxY, 3, boxH);
 
-    p.stroke(255, 220, 150, 130);
+    // soft dashed connector from box-left-middle to the pivot dot
+    p.stroke(255, 220, 150, 110);
     p.strokeWeight(1);
     p.drawingContext.setLineDash([3, 4]);
     p.noFill();
-    p.line(boxX + boxW / 2, boxY + boxH, px, py - 8);
+    p.line(boxX, boxY + boxH / 2, px + 4, py - 4);
     p.drawingContext.setLineDash([]);
 
     p.noStroke();
@@ -337,11 +391,11 @@ registerSketch('sk15', function (p) {
     p.textSize(15);
     p.textStyle(p.BOLD);
     p.textAlign(p.LEFT, p.TOP);
-    p.text('2016 — The Tipping Point', boxX + 12, boxY + 8);
+    p.text('2016 — Tipping Point', boxX + 12, boxY + 8);
 
     p.fill(220, 60, 60);
     p.textSize(11);
-    p.text('3PA share crossed 1/4 of total attempts', boxX + 12, boxY + 30);
+    p.text('3PA share crossed 1/4 of attempts', boxX + 12, boxY + 30);
 
     p.fill(150, 160, 180);
     p.textStyle(p.NORMAL);
@@ -421,14 +475,14 @@ registerSketch('sk15', function (p) {
   }
 
   function drawColorLegend() {
-    const y = 630;
+    const y = 600;
     p.textStyle(p.NORMAL);
     p.textSize(12);
     p.textAlign(p.LEFT, p.CENTER);
 
     const items = [
-      { color: [220, 60, 60],  label: 'Red core = 3-point attempts (growing)' },
-      { color: [85, 150, 230], label: 'Blue rim = 2-point attempts (shrinking)' },
+      { color: [235, 60, 50],  label: 'Red = 3-point share (growing)' },
+      { color: [85, 150, 230], label: 'Blue = 2-point share (shrinking)' },
       { color: [240, 175, 60], label: 'Gold line = Points scored' },
     ];
     const gap = 18;
@@ -453,7 +507,7 @@ registerSketch('sk15', function (p) {
   }
 
   function drawSummaryCards() {
-    const yTop = 680;
+    const yTop = 655;
     p.noStroke();
     p.fill(240, 175, 60);
     p.textStyle(p.BOLD);
